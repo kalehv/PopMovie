@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="pref_filter_options">
+        <item>@string/pref_filter_top_rated_title</item>
+        <item>@string/pref_filter_popular_title</item>
+    </string-array>
+
+    <string-array name="pref_filter_vales">
+        <item>@string/pref_filter_top_rated</item>
+        <item>@string/pref_filter_popular</item>
+    </string-array>
+</resources>
