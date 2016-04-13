@@ -7,5 +7,18 @@ public class C {
     // http://api.themoviedb.org/3/movie/top_rated?api_key=e19c269eefc0509a3cb2e153c839d590
     public static final String API_KEY_QUERY_PARAM = "api_key";
     public static final String THE_MOVIES_DB_BASE_URL = "http://api.themoviedb.org/";
-    public static final String MOVIE_POSTER_BASE_URL = "http://image.tmdb.org/t/p/w500";
+    public static final String POSTER_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500";
+    public static final String BACKDROP_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/original";
+
+    public static final String EXTRAS_POSTER_PATH = "posterPath";
+    public static final String EXTRAS_BACKDROP_PATH = "backdropPath";
+    public static final String EXTRAS_TITLE = "title";
+    public static final String EXTRAS_OVERVIEW = "overview";
+    public static final String EXTRAS_RELEASE_DATE_STRING = "releaseDate";
+    public static final String EXTRAS_LANGUAGE = "language";
+    public static final String EXTRAS_POPULARITY = "popularity";
+    public static final String EXTRAS_VOTE_COUNT = "voteCount";
+    public static final String EXTRAS_VOTE_AVERAGE = "voteAverage";
+    public static final String EXTRAS_HAS_VIDEO = "hasVideo";
+    public static final String EXTRAS_IS_ADULT = "isAdult";
 }

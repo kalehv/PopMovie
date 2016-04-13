@@ -60,7 +60,7 @@ public class ThumbnailsAdapter extends ArrayAdapter {
             posterPath = posterPath.substring(1, posterPath.length());
         }
 
-        Uri posterUri = Uri.parse(C.MOVIE_POSTER_BASE_URL).buildUpon()
+        Uri posterUri = Uri.parse(C.POSTER_IMAGE_BASE_URL).buildUpon()
                 .appendPath(posterPath)
                 .appendQueryParameter(C.API_KEY_QUERY_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
                 .build();
@@ -69,10 +69,15 @@ public class ThumbnailsAdapter extends ArrayAdapter {
                 .load(posterUri)
                 .into(holder.image);
 
+//        if (movie.getAdult()) {
+//            holder.textViewadultIndicator.setVisibility(View.VISIBLE);
+//        }
+
         return row;
     }
 
     static class ViewHolder {
+//        @Bind(R.id.textview_adult_indicator) TextView textViewadultIndicator;
         @Bind(R.id.imageview_movie_poster) ImageView image;
 
         public ViewHolder(View view) {

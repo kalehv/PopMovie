@@ -72,7 +72,7 @@ public class Movie {
     }
 
     /**
-     * @return The adult
+     * @return The a`lt
      */
     public Boolean getAdult() {
         return adult;

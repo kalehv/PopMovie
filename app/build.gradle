@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "me.kalehv.popmovie"
@@ -36,6 +36,7 @@ dependencies {
     compile 'com.android.support:preference-v7:23.3.0'
     compile 'com.android.support:design:23.3.0'
     compile 'com.android.support:palette-v7:23.3.0'
+    compile 'com.android.support:cardview-v7:23.3.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile ('com.squareup.retrofit2:retrofit:2.0.1') {
         // exclude Retrofit’s OkHttp peer-dependency module and define your own module import

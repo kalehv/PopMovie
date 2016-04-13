@@ -2,9 +2,18 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="sides_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="gridview_main_horizontal_spacing">5dp</dimen>
     <dimen name="gridview_main_vertical_spacing">5dp</dimen>
     <dimen name="gridview_column_width">120dp</dimen>
     <dimen name="appbar_elevation">0dp</dimen>
+    <dimen name="app_bar_height">240dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
+    <dimen name="pad_adult_indicator_text">5dp</dimen>
+    <dimen name="font_size_movie_title">8sp</dimen>
+    <dimen name="width_poster_image">92dp</dimen>
+    <dimen name="height_poster_image">138dp</dimen>
+    <dimen name="negative_poster_top_margin">-24dp</dimen>
+    <dimen name="margin_standard">16dp</dimen>
 </resources>

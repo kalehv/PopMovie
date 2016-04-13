@@ -11,4 +11,9 @@
     <string name="pref_filter_popular_title">Popular</string>
     <string name="pref_filter_top_rated">top_rated</string>
     <string name="pref_filter_popular">popular</string>
+    <string name="title_activity_scrolling">ScrollingActivity</string>
+
+    <string name="indicator_adult_movie">A</string>
+    <string name="indicator_universal_movie">U/A</string>
+
 </resources>

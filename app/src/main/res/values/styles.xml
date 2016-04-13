@@ -17,4 +17,15 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="AppTheme.Visibility" parent="AppTheme" />
+    <style name="AppTheme.Visibility.Visible" parent="AppTheme.Visibility">
+        <item name="android:visibility">visible</item>
+    </style>
+    <style name="AppTheme.Visibility.Invisible" parent="AppTheme.Visibility">
+        <item name="android:visibility">invisible</item>
+    </style>
+    <style name="AppTheme.Visibility.Gone" parent="AppTheme.Visibility">
+        <item name="android:visibility">gone</item>
+    </style>
+
 </resources>
