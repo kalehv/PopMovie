@@ -1,5 +1,7 @@
 package me.kalehv.popmovie.services;
 
+import com.google.gson.JsonObject;
+
 import me.kalehv.popmovie.BuildConfig;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.MoviesData;
@@ -15,30 +17,35 @@ public class TheMovieDBServiceManager {
 
     private final String TAG = TheMovieDBServiceManager.class.getSimpleName();
 
-    public static Retrofit retrofit = null;
-    public static TheMoviesDBApi api = null;
-    public static TheMovieDBServiceManager serviceManager = null;
+    public static Retrofit mRetrofit = null;
+    public static TheMoviesDBApi mApi = null;
+    public static TheMovieDBServiceManager mServiceManager = null;
+    public static final String mApiKey = BuildConfig.THE_MOVIE_DB_API_KEY;
 
 
     private TheMovieDBServiceManager() {
-        retrofit = new Retrofit.Builder()
+        mRetrofit = new Retrofit.Builder()
                 .baseUrl(C.THE_MOVIES_DB_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        api = retrofit.create(TheMoviesDBApi.class);
+        mApi = mRetrofit.create(TheMoviesDBApi.class);
     }
 
     public static TheMovieDBServiceManager getInstance() {
-        if (serviceManager == null) {
-            serviceManager = new TheMovieDBServiceManager();
+        if (mServiceManager == null) {
+            mServiceManager = new TheMovieDBServiceManager();
         }
-        return serviceManager;
+        return mServiceManager;
     }
 
     public void getMoviesData(String filter, int pageNum, Callback<MoviesData> callback) {
-        String apiKey = BuildConfig.THE_MOVIE_DB_API_KEY;
-        Call<MoviesData> moviesDataCall = api.getMoviesData(filter, pageNum, apiKey);
+        Call<MoviesData> moviesDataCall = mApi.getMoviesData(filter, pageNum, mApiKey);
         moviesDataCall.enqueue(callback);
+    }
+
+    public void getMoviesVideos(int movieId, Callback<JsonObject> callback) {
+        Call<JsonObject> videoKeyCall = mApi.getMovieVideoKey(movieId, mApiKey);
+        videoKeyCall.enqueue(callback);
     }
 }

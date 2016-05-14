@@ -300,6 +300,9 @@ http://www.google.com/design/spec/style/color.html#color-ui-color-palette -->
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
 
+    <color name="black_half_transparent">#80000000</color>
+    <color name="white_half_transparent">#80FFFFFF</color>
+
     <!--App Colors-->
     <color name="colorPrimary">@color/black</color>
     <color name="colorPrimaryDark">@color/black</color>

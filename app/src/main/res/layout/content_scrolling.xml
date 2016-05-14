@@ -75,7 +75,7 @@
                         android:layout_marginLeft="@dimen/text_margin"
                         android:layout_marginRight="@dimen/text_margin"
                         android:isIndicator="true"
-                        android:numStars="10"/>
+                        android:numStars="5"/>
                 </LinearLayout>
 
             </LinearLayout>

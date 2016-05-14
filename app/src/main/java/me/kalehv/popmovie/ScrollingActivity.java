@@ -1,6 +1,7 @@
 package me.kalehv.popmovie;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -11,11 +12,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.squareup.picasso.Picasso;
 
 import java.text.DateFormat;
@@ -26,6 +31,10 @@ import java.util.Date;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.global.C;
+import me.kalehv.popmovie.services.TheMovieDBServiceManager;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ScrollingActivity extends AppCompatActivity {
 
@@ -34,6 +43,7 @@ public class ScrollingActivity extends AppCompatActivity {
     @Bind(R.id.app_bar) AppBarLayout mAppBarLayout;
     @Bind(R.id.collapsing_toolbar_layout) CollapsingToolbarLayout mCollapsingToolbarLayout;
     @Bind(R.id.header) ImageView mImageViewHeader;
+    @Bind(R.id.header_button_trailer) ImageButton mImageButtonHeader;
     @Bind(R.id.toolbar) Toolbar mToolbar;
     @Bind(R.id.nested_scrollview) NestedScrollView mNestedScrollView;
     @Bind(R.id.cardview_movie_details) FrameLayout mCardViewMovieDetails;
@@ -45,6 +55,11 @@ public class ScrollingActivity extends AppCompatActivity {
 
     private Intent mIncomingIntent;
     private int mActionBarHeight;
+    private TheMovieDBServiceManager mTheMovieDBServiceManager;
+
+    public ScrollingActivity() {
+        mTheMovieDBServiceManager = TheMovieDBServiceManager.getInstance();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +71,60 @@ public class ScrollingActivity extends AppCompatActivity {
 
         setupActionBar();
         setupView();
+        fetchVideoKey();
+    }
+
+    private void fetchVideoKey() {
+        if (mTheMovieDBServiceManager != null) {
+            int movieId = mIncomingIntent.getIntExtra(C.EXTRAS_MOVIE_ID, -1);
+            if (movieId != -1) {
+                mTheMovieDBServiceManager.getMoviesVideos(movieId, new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call <JsonObject> call, Response<JsonObject> response) {
+                        onReceiveVideoSuccessfulResponse(response);
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+                        Log.i(TAG, "onFailure: Error fetching trailer video link");
+                    }
+                });
+            }
+        }
+    }
+
+    private void onReceiveVideoSuccessfulResponse(Response<JsonObject> response) {
+        JsonArray results = response.body().get("results").getAsJsonArray();
+        if (results != null) {
+            JsonObject first = results.get(0).getAsJsonObject();
+            if (first != null) {
+                final String videoKey = first.get(C.VIDEOS_YOUTUBE_KEY_NAME).getAsString();
+                assignTrailerUri(videoKey, mImageButtonHeader);
+            }
+        }
+    }
+
+    private void assignTrailerUri(final String videoKey, final View view ) {
+        if (videoKey != null) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    view.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Uri uri = Uri.parse(C.YOUTUBE_BASE_URL)
+                                    .buildUpon()
+                                    .appendQueryParameter(C.YOUTUBE_QUERY_PARAM, videoKey)
+                                    .build();
+
+                            Intent youtubeIntent = new Intent(Intent.ACTION_VIEW, uri);
+                            youtubeIntent.putExtra(C.YOUTUBE_FORCE_FULLSCREEN, true);
+                            startActivity(youtubeIntent);
+                        }
+                    });
+                }
+            });
+        }
     }
 
     private void setupActionBar() {
@@ -148,7 +217,7 @@ public class ScrollingActivity extends AppCompatActivity {
             releaseAdult += "   " + getResources().getString(R.string.indicator_universal_movie);
         }
 
-        mRatingBarMovieRating.setRating((float) mIncomingIntent.getDoubleExtra(C.EXTRAS_VOTE_AVERAGE, 0));
+        mRatingBarMovieRating.setRating((float) mIncomingIntent.getDoubleExtra(C.EXTRAS_VOTE_AVERAGE, 0) / 2.0f);
 
         mTextViewMovieReleaseAdult.setText(releaseAdult);
     }

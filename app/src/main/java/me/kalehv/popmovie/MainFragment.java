@@ -65,6 +65,7 @@ public class MainFragment
         Intent detailIntent = new Intent(getActivity(), ScrollingActivity.class);
 
         if (movie != null) {
+            detailIntent.putExtra(C.EXTRAS_MOVIE_ID, movie.getId());
             detailIntent.putExtra(C.EXTRAS_POSTER_PATH, movie.getPosterPath());
             detailIntent.putExtra(C.EXTRAS_BACKDROP_PATH, movie.getBackdropPath());
             detailIntent.putExtra(C.EXTRAS_TITLE, movie.getTitle());

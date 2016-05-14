@@ -65,19 +65,16 @@ public class ThumbnailsAdapter extends ArrayAdapter {
                 .appendQueryParameter(C.API_KEY_QUERY_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
                 .build();
 
+        holder.image.setAdjustViewBounds(true);
+
         Picasso.with(this.context)
                 .load(posterUri)
                 .into(holder.image);
-
-//        if (movie.getAdult()) {
-//            holder.textViewadultIndicator.setVisibility(View.VISIBLE);
-//        }
 
         return row;
     }
 
     static class ViewHolder {
-//        @Bind(R.id.textview_adult_indicator) TextView textViewadultIndicator;
         @Bind(R.id.imageview_movie_poster) ImageView image;
 
         public ViewHolder(View view) {
