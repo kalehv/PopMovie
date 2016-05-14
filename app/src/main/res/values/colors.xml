@@ -304,10 +304,10 @@ http://www.google.com/design/spec/style/color.html#color-ui-color-palette -->
     <color name="white_half_transparent">#80FFFFFF</color>
 
     <!--App Colors-->
-    <color name="colorPrimary">@color/black</color>
+    <color name="colorPrimary">@color/grey_900</color>
     <color name="colorPrimaryDark">@color/black</color>
-    <color name="colorAccent">@color/red_A200</color>
+    <color name="colorAccent">#40C4FF</color>
 
-    <color name="colorBackground">@color/black</color>
+    <color name="colorBackground">@color/grey_50</color>
 
 </resources>

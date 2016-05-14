@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -169,11 +170,12 @@ public class ScrollingActivity extends AppCompatActivity {
             }
         });
 
+        // Landscape
         if (widthDp >= heightDp) {
-            // landscape
             FrameLayout.LayoutParams cardViewLayoutParams = (FrameLayout.LayoutParams) mCardViewMovieDetails.getLayoutParams();
             int topMargin = (int) (heightDp / 3);
-            cardViewLayoutParams.setMargins(128, 0, 128, 0);
+            cardViewLayoutParams.width = (int) (widthDp - getResources().getDimension(R.dimen.margin_detail_side));
+            cardViewLayoutParams.gravity = Gravity.CENTER_HORIZONTAL;
 
             CoordinatorLayout.LayoutParams appBarLayoutNestedScrollViewParams =
                     (CoordinatorLayout.LayoutParams) mNestedScrollView.getLayoutParams();
