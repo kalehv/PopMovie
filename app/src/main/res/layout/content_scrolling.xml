@@ -77,6 +77,7 @@
                         android:layout_marginRight="@dimen/text_margin"
                         android:isIndicator="true"
                         android:numStars="5"/>
+
                 </LinearLayout>
 
             </LinearLayout>
@@ -86,6 +87,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"/>
+
+            <ListView
+                android:id="@+id/listview_reviews"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/sides_margin"/>
 
         </LinearLayout>
 

@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -27,11 +28,15 @@ import com.squareup.picasso.Picasso;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import me.kalehv.popmovie.adapters.ReviewsAdapter;
 import me.kalehv.popmovie.global.C;
+import me.kalehv.popmovie.models.Review;
+import me.kalehv.popmovie.models.ReviewsData;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -53,10 +58,13 @@ public class ScrollingActivity extends AppCompatActivity {
     @Bind(R.id.textview_movie_title) TextView mTextViewMovieTitle;
     @Bind(R.id.textview_movie_release_adult) TextView mTextViewMovieReleaseAdult;
     @Bind(R.id.ratingbar_movie_rating) RatingBar mRatingBarMovieRating;
+    @Bind(R.id.listview_reviews) ListView mListViewMovieReviews;
 
     private Intent mIncomingIntent;
     private int mActionBarHeight;
     private TheMovieDBServiceManager mTheMovieDBServiceManager;
+    private ArrayList<Review> mReviews;
+    private ReviewsAdapter mReviewsAdapter;
 
     public ScrollingActivity() {
         mTheMovieDBServiceManager = TheMovieDBServiceManager.getInstance();
@@ -73,6 +81,33 @@ public class ScrollingActivity extends AppCompatActivity {
         setupActionBar();
         setupView();
         fetchVideoKey();
+        fetchReviews();
+    }
+
+    private void setAdapter() {
+        mReviewsAdapter = new ReviewsAdapter(this, R.layout.item_movie_review, mReviews);
+        mListViewMovieReviews.setAdapter(mReviewsAdapter);
+    }
+
+    private void fetchReviews() {
+        mReviews = new ArrayList<>();
+        if (mTheMovieDBServiceManager != null) {
+            int movieId = mIncomingIntent.getIntExtra(C.EXTRAS_MOVIE_ID, -1);
+            if (movieId != -1) {
+                mTheMovieDBServiceManager.getReviewsData(movieId, 1, new Callback<ReviewsData>() {
+                    @Override
+                    public void onResponse(Call<ReviewsData> moviesDataCall, Response<ReviewsData> response) {
+                        if (response.isSuccessful()) {
+                            mReviews.addAll(response.body().getReviews());
+                            setAdapter();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ReviewsData> reviewsDataCall, Throwable t) {}
+                });
+            }
+        }
     }
 
     private void fetchVideoKey() {

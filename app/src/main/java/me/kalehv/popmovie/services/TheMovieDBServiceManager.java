@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import me.kalehv.popmovie.BuildConfig;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.MoviesData;
+import me.kalehv.popmovie.models.ReviewsData;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Retrofit;
@@ -39,13 +40,27 @@ public class TheMovieDBServiceManager {
         return mServiceManager;
     }
 
+    /*
+        Movies
+     */
     public void getMoviesData(String filter, int pageNum, Callback<MoviesData> callback) {
         Call<MoviesData> moviesDataCall = mApi.getMoviesData(filter, pageNum, mApiKey);
         moviesDataCall.enqueue(callback);
     }
 
+    /*
+        Videos
+     */
     public void getMoviesVideos(int movieId, Callback<JsonObject> callback) {
         Call<JsonObject> videoKeyCall = mApi.getMovieVideoKey(movieId, mApiKey);
         videoKeyCall.enqueue(callback);
+    }
+
+    /*
+        Reviews
+     */
+    public void getReviewsData(int movieId, int pageNum, Callback<ReviewsData> callback) {
+        Call<ReviewsData> reviewsDataCall = mApi.getReviewsData(movieId, pageNum, mApiKey);
+        reviewsDataCall.enqueue(callback);
     }
 }

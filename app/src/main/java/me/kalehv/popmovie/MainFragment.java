@@ -15,6 +15,7 @@ import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import me.kalehv.popmovie.adapters.ThumbnailsAdapter;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.Movie;
 import me.kalehv.popmovie.models.MoviesData;
@@ -31,7 +32,7 @@ public class MainFragment
         implements GridView.OnItemClickListener {
     @Bind(R.id.gridview_thumbnails) GridView mGridView;
 
-    private ArrayList<Movie> movies;
+    private ArrayList<Movie> mMovies;
 
     private ThumbnailsAdapter mThumbnailsAdapter;
     private TheMovieDBServiceManager mTheMovieDBServiceManager;
@@ -82,8 +83,8 @@ public class MainFragment
         startActivity(detailIntent);
     }
 
-    private void setGridViewAdapter() {
-        mThumbnailsAdapter = new ThumbnailsAdapter(getActivity(), R.layout.item_grid_movies, movies);
+    private void setAdapter() {
+        mThumbnailsAdapter = new ThumbnailsAdapter(getActivity(), R.layout.item_grid_movies, mMovies);
         this.mGridView.setAdapter(mThumbnailsAdapter);
     }
 
@@ -97,15 +98,15 @@ public class MainFragment
         // Only update data if previous filter is not the same as one in Shared Preferences
         if (mFilteredBy == null || !mFilteredBy.equals(filter)) {
             // Update filter and fetch data
-            this.movies = new ArrayList<>();
+            this.mMovies = new ArrayList<>();
             mFilteredBy = filter;
 
             mTheMovieDBServiceManager.getMoviesData(filter, 1, new Callback<MoviesData>() {
                 @Override
                 public void onResponse(Call<MoviesData> moviesDataCall, Response<MoviesData> response) {
                     if (response.isSuccessful()) {
-                        movies.addAll(response.body().getMovies());
-                        setGridViewAdapter();
+                        mMovies.addAll(response.body().getMovies());
+                        setAdapter();
                     }
                 }
 

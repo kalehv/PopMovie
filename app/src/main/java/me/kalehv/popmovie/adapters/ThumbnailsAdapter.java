@@ -1,4 +1,4 @@
-package me.kalehv.popmovie;
+package me.kalehv.popmovie.adapters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -16,6 +16,8 @@ import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import me.kalehv.popmovie.BuildConfig;
+import me.kalehv.popmovie.R;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.Movie;
 
@@ -30,14 +32,12 @@ public class ThumbnailsAdapter extends ArrayAdapter {
 
     private Context context;
     private int layoutResourceId;
-    private ArrayList data = new ArrayList();
 
     public ThumbnailsAdapter(Context context, @LayoutRes int layoutResourceId, ArrayList data) {
         super(context, layoutResourceId, data);
 
         this.layoutResourceId = layoutResourceId;
         this.context = context;
-        this.data = data;
     }
 
     @Override
@@ -54,7 +54,8 @@ public class ThumbnailsAdapter extends ArrayAdapter {
             holder = (ViewHolder) row.getTag();
         }
 
-        Movie movie = (Movie) data.get(position);
+        Movie movie = (Movie) getItem(position);
+
         String posterPath = movie.getPosterPath();
         if (posterPath.charAt(0) == '/') {
             posterPath = posterPath.substring(1, posterPath.length());
