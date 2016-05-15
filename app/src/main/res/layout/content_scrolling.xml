@@ -88,11 +88,11 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"/>
 
-            <ListView
-                android:id="@+id/listview_reviews"
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerview_movie_review"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/sides_margin"/>
+                android:scrollbars="none"/>
 
         </LinearLayout>
 

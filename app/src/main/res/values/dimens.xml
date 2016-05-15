@@ -17,4 +17,5 @@
     <dimen name="negative_poster_top_margin">-24dp</dimen>
     <dimen name="margin_standard">16dp</dimen>
     <dimen name="margin_detail_side">128dp</dimen>
+    <dimen name="half_margin">8dp</dimen>
 </resources>

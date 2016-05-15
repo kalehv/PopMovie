@@ -9,6 +9,8 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
@@ -17,7 +19,6 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -58,7 +59,7 @@ public class ScrollingActivity extends AppCompatActivity {
     @Bind(R.id.textview_movie_title) TextView mTextViewMovieTitle;
     @Bind(R.id.textview_movie_release_adult) TextView mTextViewMovieReleaseAdult;
     @Bind(R.id.ratingbar_movie_rating) RatingBar mRatingBarMovieRating;
-    @Bind(R.id.listview_reviews) ListView mListViewMovieReviews;
+    @Bind(R.id.recyclerview_movie_review) RecyclerView mRecyclerViewMovieReviews;
 
     private Intent mIncomingIntent;
     private int mActionBarHeight;
@@ -85,8 +86,11 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
     private void setAdapter() {
-        mReviewsAdapter = new ReviewsAdapter(this, R.layout.item_movie_review, mReviews);
-        mListViewMovieReviews.setAdapter(mReviewsAdapter);
+        mReviewsAdapter = new ReviewsAdapter(this, mReviews);
+        mRecyclerViewMovieReviews.setAdapter(mReviewsAdapter);
+
+        mRecyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerViewMovieReviews.setNestedScrollingEnabled(false);
     }
 
     private void fetchReviews() {

@@ -1,15 +1,13 @@
 package me.kalehv.popmovie.adapters;
 
-import android.app.Activity;
 import android.content.Context;
-import android.support.annotation.LayoutRes;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -19,45 +17,48 @@ import me.kalehv.popmovie.models.Review;
 /**
  * Created by harshadkale on 5/15/16.
  */
-public class ReviewsAdapter extends ArrayAdapter {
+public class ReviewsAdapter
+        extends RecyclerView.Adapter<ReviewsAdapter.ViewHolder> {
     private final String TAG = ThumbnailsAdapter.class.getSimpleName();
 
-    private Context context;
-    private int layoutResourceId;
+    private Context mContext;
+    private List<Review> mReviewList;
 
-    public ReviewsAdapter(Context context, @LayoutRes int layoutResourceId, ArrayList data) {
-        super(context, layoutResourceId, data);
-
-        this.layoutResourceId = layoutResourceId;
-        this.context = context;
+    public ReviewsAdapter(Context context, List<Review> data) {
+        mContext = context;
+        mReviewList = data;
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View row = convertView;
-        final ViewHolder holder;
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
-        if (row == null) {
-            LayoutInflater inflater = ((Activity) context).getLayoutInflater();
-            row = inflater.inflate(layoutResourceId, parent, false);
-            holder = new ViewHolder(row);
-            row.setTag(holder);
-        } else {
-            holder = (ViewHolder) row.getTag();
-        }
+        View reviewView = inflater.inflate(R.layout.item_movie_review, parent, false);
 
-        Review review = (Review) getItem(position);
-        holder.textViewAuthor.setText(review.getAuthor());
-        holder.textViewContent.setText(review.getContent());
-
-        return row;
+        return new ViewHolder(reviewView);
     }
 
-    static class ViewHolder {
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        Review review = mReviewList.get(position);
+
+        holder.textViewAuthor.setText(review.getAuthor().toUpperCase());
+        holder.textViewContent.setText(review.getContent());
+    }
+
+    @Override
+    public int getItemCount() {
+        return mReviewList.size();
+    }
+
+    public static class ViewHolder
+            extends RecyclerView.ViewHolder {
         @Bind(R.id.textview_review_author) TextView textViewAuthor;
         @Bind(R.id.textview_review_content) TextView textViewContent;
 
         public ViewHolder(View view) {
+            super(view);
+
             ButterKnife.bind(this, view);
         }
     }
