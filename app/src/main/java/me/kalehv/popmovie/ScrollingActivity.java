@@ -31,8 +31,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.adapters.ReviewsAdapter;
 import me.kalehv.popmovie.global.C;
@@ -47,28 +48,27 @@ public class ScrollingActivity extends AppCompatActivity {
 
     private final String TAG = ScrollingActivity.class.getSimpleName();
 
-    @Bind(R.id.app_bar) AppBarLayout mAppBarLayout;
-    @Bind(R.id.collapsing_toolbar_layout) CollapsingToolbarLayout mCollapsingToolbarLayout;
-    @Bind(R.id.header) ImageView mImageViewHeader;
-    @Bind(R.id.header_button_trailer) ImageButton mImageButtonHeader;
-    @Bind(R.id.toolbar) Toolbar mToolbar;
-    @Bind(R.id.nested_scrollview) NestedScrollView mNestedScrollView;
-    @Bind(R.id.cardview_movie_details) FrameLayout mCardViewMovieDetails;
-    @Bind(R.id.imageview_movie_detail_poster) ImageView mImageViewMovieDetailPoster;
-    @Bind(R.id.textview_movie_overview) TextView mTextViewOverview;
-    @Bind(R.id.textview_movie_title) TextView mTextViewMovieTitle;
-    @Bind(R.id.textview_movie_release_adult) TextView mTextViewMovieReleaseAdult;
-    @Bind(R.id.ratingbar_movie_rating) RatingBar mRatingBarMovieRating;
-    @Bind(R.id.recyclerview_movie_review) RecyclerView mRecyclerViewMovieReviews;
+    @BindView(R.id.app_bar) AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout) CollapsingToolbarLayout collapsingToolbarLayout;
+    @BindView(R.id.header) ImageView imageViewHeader;
+    @BindView(R.id.header_button_trailer) ImageButton imageButtonHeader;
+    @BindView(R.id.toolbar) Toolbar toolbar;
+    @BindView(R.id.nested_scrollview) NestedScrollView nestedScrollView;
+    @BindView(R.id.cardview_movie_details) FrameLayout cardViewMovieDetails;
+    @BindView(R.id.imageview_movie_detail_poster) ImageView imageViewMovieDetailPoster;
+    @BindView(R.id.textview_movie_overview) TextView textViewOverview;
+    @BindView(R.id.textview_movie_title) TextView textViewMovieTitle;
+    @BindView(R.id.textview_movie_release_adult) TextView textViewMovieReleaseAdult;
+    @BindView(R.id.ratingbar_movie_rating) RatingBar ratingBarMovieRating;
+    @BindView(R.id.recyclerview_movie_review) RecyclerView recyclerViewMovieReviews;
 
-    private Intent mIncomingIntent;
-    private int mActionBarHeight;
-    private TheMovieDBServiceManager mTheMovieDBServiceManager;
-    private ArrayList<Review> mReviews;
-    private ReviewsAdapter mReviewsAdapter;
+    private Intent incomingIntent;
+    private int actionBarHeight;
+    private TheMovieDBServiceManager movieDBServiceManager;
+    private ArrayList<Review> reviews;
 
     public ScrollingActivity() {
-        mTheMovieDBServiceManager = TheMovieDBServiceManager.getInstance();
+        movieDBServiceManager = TheMovieDBServiceManager.getInstance();
     }
 
     @Override
@@ -77,7 +77,7 @@ public class ScrollingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scrolling);
         ButterKnife.bind(this);
 
-        mIncomingIntent = getIntent();
+        incomingIntent = getIntent();
 
         setupActionBar();
         setupView();
@@ -86,23 +86,23 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
     private void setAdapter() {
-        mReviewsAdapter = new ReviewsAdapter(this, mReviews);
-        mRecyclerViewMovieReviews.setAdapter(mReviewsAdapter);
+        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(this, reviews);
+        recyclerViewMovieReviews.setAdapter(reviewsAdapter);
 
-        mRecyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerViewMovieReviews.setNestedScrollingEnabled(false);
+        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
     }
 
     private void fetchReviews() {
-        mReviews = new ArrayList<>();
-        if (mTheMovieDBServiceManager != null) {
-            int movieId = mIncomingIntent.getIntExtra(C.EXTRAS_MOVIE_ID, -1);
+        reviews = new ArrayList<>();
+        if (movieDBServiceManager != null) {
+            int movieId = incomingIntent.getIntExtra(C.EXTRAS_MOVIE_ID, -1);
             if (movieId != -1) {
-                mTheMovieDBServiceManager.getReviewsData(movieId, 1, new Callback<ReviewsData>() {
+                movieDBServiceManager.getReviewsData(movieId, 1, new Callback<ReviewsData>() {
                     @Override
                     public void onResponse(Call<ReviewsData> moviesDataCall, Response<ReviewsData> response) {
                         if (response.isSuccessful()) {
-                            mReviews.addAll(response.body().getReviews());
+                            reviews.addAll(response.body().getReviews());
                             setAdapter();
                         }
                     }
@@ -115,10 +115,10 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
     private void fetchVideoKey() {
-        if (mTheMovieDBServiceManager != null) {
-            int movieId = mIncomingIntent.getIntExtra(C.EXTRAS_MOVIE_ID, -1);
+        if (movieDBServiceManager != null) {
+            int movieId = incomingIntent.getIntExtra(C.EXTRAS_MOVIE_ID, -1);
             if (movieId != -1) {
-                mTheMovieDBServiceManager.getMoviesVideos(movieId, new Callback<JsonObject>() {
+                movieDBServiceManager.getMoviesVideos(movieId, new Callback<JsonObject>() {
                     @Override
                     public void onResponse(Call <JsonObject> call, Response<JsonObject> response) {
                         onReceiveVideoSuccessfulResponse(response);
@@ -139,7 +139,7 @@ public class ScrollingActivity extends AppCompatActivity {
             JsonObject first = results.get(0).getAsJsonObject();
             if (first != null) {
                 final String videoKey = first.get(C.VIDEOS_YOUTUBE_KEY_NAME).getAsString();
-                assignTrailerUri(videoKey, mImageButtonHeader);
+                assignTrailerUri(videoKey, imageButtonHeader);
             }
         }
     }
@@ -168,7 +168,7 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
     private void setupActionBar() {
-        setSupportActionBar(mToolbar);
+        setSupportActionBar(toolbar);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -177,7 +177,7 @@ public class ScrollingActivity extends AppCompatActivity {
         TypedValue tv = new TypedValue();
         if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
         {
-            mActionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
         }
 
         setTitle(""); // Do not display any title by default
@@ -186,10 +186,10 @@ public class ScrollingActivity extends AppCompatActivity {
         // Ref - http://stackoverflow.com/a/31362835/906577
         float heightDp = getResources().getDisplayMetrics().heightPixels;
         float widthDp = getResources().getDisplayMetrics().widthPixels;
-        CoordinatorLayout.LayoutParams appBarLayoutParams = (CoordinatorLayout.LayoutParams) mAppBarLayout.getLayoutParams();
+        CoordinatorLayout.LayoutParams appBarLayoutParams = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
         appBarLayoutParams.height = (int) ((widthDp * 2) / 3);
 
-        mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
             boolean isShow = false;
             int scrollRange = -1;
 
@@ -199,11 +199,11 @@ public class ScrollingActivity extends AppCompatActivity {
                     scrollRange = appBarLayout.getTotalScrollRange();
                 }
                 // Only display title when toolbar is displayed with size greater than equal to action bar
-                if (scrollRange + verticalOffset <= mActionBarHeight && scrollRange + verticalOffset >= 0) {
-                    mCollapsingToolbarLayout.setTitle(mIncomingIntent.getStringExtra(C.EXTRAS_TITLE));
+                if (scrollRange + verticalOffset <= actionBarHeight && scrollRange + verticalOffset >= 0) {
+                    collapsingToolbarLayout.setTitle(incomingIntent.getStringExtra(C.EXTRAS_TITLE));
                     isShow = true;
                 } else if(isShow) {
-                    mCollapsingToolbarLayout.setTitle("");
+                    collapsingToolbarLayout.setTitle("");
                     isShow = false;
                 }
             }
@@ -211,13 +211,13 @@ public class ScrollingActivity extends AppCompatActivity {
 
         // Landscape
         if (widthDp >= heightDp) {
-            FrameLayout.LayoutParams cardViewLayoutParams = (FrameLayout.LayoutParams) mCardViewMovieDetails.getLayoutParams();
+            FrameLayout.LayoutParams cardViewLayoutParams = (FrameLayout.LayoutParams) cardViewMovieDetails.getLayoutParams();
             int topMargin = (int) (heightDp / 3);
             cardViewLayoutParams.width = (int) (widthDp - getResources().getDimension(R.dimen.margin_detail_side));
             cardViewLayoutParams.gravity = Gravity.CENTER_HORIZONTAL;
 
             CoordinatorLayout.LayoutParams appBarLayoutNestedScrollViewParams =
-                    (CoordinatorLayout.LayoutParams) mNestedScrollView.getLayoutParams();
+                    (CoordinatorLayout.LayoutParams) nestedScrollView.getLayoutParams();
             AppBarLayout.ScrollingViewBehavior appBarLayoutNestedScrollViewParamsBehavior =
                     (AppBarLayout.ScrollingViewBehavior) appBarLayoutNestedScrollViewParams.getBehavior();
             appBarLayoutNestedScrollViewParamsBehavior.setOverlayTop((int) heightDp - topMargin);
@@ -225,22 +225,22 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
     private void setupView() {
-        String backdropPath = mIncomingIntent.getStringExtra(C.EXTRAS_BACKDROP_PATH);
-        String posterPath = mIncomingIntent.getStringExtra(C.EXTRAS_POSTER_PATH);
+        String backdropPath = incomingIntent.getStringExtra(C.EXTRAS_BACKDROP_PATH);
+        String posterPath = incomingIntent.getStringExtra(C.EXTRAS_POSTER_PATH);
 
         Picasso.with(this)
                 .load(C.POSTER_IMAGE_BASE_URL + posterPath)
-                .into(mImageViewMovieDetailPoster);
+                .into(imageViewMovieDetailPoster);
 
         Picasso.with(this)
                 .load(C.BACKDROP_IMAGE_BASE_URL + backdropPath)
-                .into(mImageViewHeader);
+                .into(imageViewHeader);
 
-        mTextViewMovieTitle.setText(mIncomingIntent.getStringExtra(C.EXTRAS_TITLE));
-        mTextViewOverview.setText(mIncomingIntent.getStringExtra(C.EXTRAS_OVERVIEW));
+        textViewMovieTitle.setText(incomingIntent.getStringExtra(C.EXTRAS_TITLE));
+        textViewOverview.setText(incomingIntent.getStringExtra(C.EXTRAS_OVERVIEW));
 
-        String releaseDate = mIncomingIntent.getStringExtra(C.EXTRAS_RELEASE_DATE_STRING);
-        DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String releaseDate = incomingIntent.getStringExtra(C.EXTRAS_RELEASE_DATE_STRING);
+        DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         fromFormat.setLenient(false);
         DateFormat toFormat = DateFormat.getDateInstance();
         toFormat.setLenient(false);
@@ -252,14 +252,14 @@ public class ScrollingActivity extends AppCompatActivity {
         }
 
         String releaseAdult = releaseDate;
-        if (mIncomingIntent.getBooleanExtra(C.EXTRAS_IS_ADULT, false)) {
+        if (incomingIntent.getBooleanExtra(C.EXTRAS_IS_ADULT, false)) {
             releaseAdult += "   " + getResources().getString(R.string.indicator_adult_movie);
         } else {
             releaseAdult += "   " + getResources().getString(R.string.indicator_universal_movie);
         }
 
-        mRatingBarMovieRating.setRating((float) mIncomingIntent.getDoubleExtra(C.EXTRAS_VOTE_AVERAGE, 0) / 2.0f);
+        ratingBarMovieRating.setRating((float) incomingIntent.getDoubleExtra(C.EXTRAS_VOTE_AVERAGE, 0) / 2.0f);
 
-        mTextViewMovieReleaseAdult.setText(releaseAdult);
+        textViewMovieReleaseAdult.setText(releaseAdult);
     }
 }

@@ -5,7 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**
@@ -13,7 +13,7 @@ import butterknife.ButterKnife;
  */
 public abstract class ToolbarAppCompatActivity extends AppCompatActivity {
 
-    @Bind(R.id.toolbar) @Nullable Toolbar mToolbar;
+    @BindView(R.id.toolbar) @Nullable Toolbar toolbar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -21,8 +21,8 @@ public abstract class ToolbarAppCompatActivity extends AppCompatActivity {
         setContentView(getLayoutResourceId());
         ButterKnife.bind(this);
 
-        if (mToolbar != null) {
-            setSupportActionBar(mToolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
         }
     }
 

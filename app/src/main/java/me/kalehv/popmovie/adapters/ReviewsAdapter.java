@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.R;
 import me.kalehv.popmovie.models.Review;
@@ -21,12 +21,12 @@ public class ReviewsAdapter
         extends RecyclerView.Adapter<ReviewsAdapter.ViewHolder> {
     private final String TAG = ThumbnailsAdapter.class.getSimpleName();
 
-    private Context mContext;
-    private List<Review> mReviewList;
+    private Context context;
+    private List<Review> reviewList;
 
     public ReviewsAdapter(Context context, List<Review> data) {
-        mContext = context;
-        mReviewList = data;
+        this.context = context;
+        reviewList = data;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class ReviewsAdapter
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Review review = mReviewList.get(position);
+        Review review = reviewList.get(position);
 
         holder.textViewAuthor.setText(review.getAuthor().toUpperCase());
         holder.textViewContent.setText(review.getContent());
@@ -48,15 +48,15 @@ public class ReviewsAdapter
 
     @Override
     public int getItemCount() {
-        return mReviewList.size();
+        return reviewList.size();
     }
 
-    public static class ViewHolder
+    static class ViewHolder
             extends RecyclerView.ViewHolder {
-        @Bind(R.id.textview_review_author) TextView textViewAuthor;
-        @Bind(R.id.textview_review_content) TextView textViewContent;
+        @BindView(R.id.textview_review_author) TextView textViewAuthor;
+        @BindView(R.id.textview_review_content) TextView textViewContent;
 
-        public ViewHolder(View view) {
+        ViewHolder(View view) {
             super(view);
 
             ButterKnife.bind(this, view);

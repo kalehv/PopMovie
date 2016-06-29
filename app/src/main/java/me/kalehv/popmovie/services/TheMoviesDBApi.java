@@ -12,7 +12,7 @@ import retrofit2.http.Query;
 /**
  * Created by harshadkale on 4/10/16.
  */
-public interface TheMoviesDBApi {
+interface TheMoviesDBApi {
 
     /*
         Movies

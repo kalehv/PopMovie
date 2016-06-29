@@ -13,7 +13,7 @@ import android.widget.GridView;
 
 import java.util.ArrayList;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.adapters.ThumbnailsAdapter;
 import me.kalehv.popmovie.global.C;
@@ -30,16 +30,15 @@ import retrofit2.Response;
 public class MainFragment
         extends Fragment
         implements GridView.OnItemClickListener {
-    @Bind(R.id.gridview_thumbnails) GridView mGridView;
+    @BindView(R.id.gridview_thumbnails) GridView gridView;
 
-    private ArrayList<Movie> mMovies;
+    private ArrayList<Movie> movies;
 
-    private ThumbnailsAdapter mThumbnailsAdapter;
-    private TheMovieDBServiceManager mTheMovieDBServiceManager;
-    private String mFilteredBy;
+    private TheMovieDBServiceManager movieDBServiceManager;
+    private String filteredBy;
 
     public MainFragment() {
-        mTheMovieDBServiceManager = TheMovieDBServiceManager.getInstance();
+        movieDBServiceManager = TheMovieDBServiceManager.getInstance();
     }
 
     @Override
@@ -53,7 +52,7 @@ public class MainFragment
                              Bundle savedInstanceState) {
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
-        mGridView.setOnItemClickListener(this);
+        gridView.setOnItemClickListener(this);
 
         fetchMoviesData();
 
@@ -84,8 +83,8 @@ public class MainFragment
     }
 
     private void setAdapter() {
-        mThumbnailsAdapter = new ThumbnailsAdapter(getActivity(), R.layout.item_grid_movies, mMovies);
-        this.mGridView.setAdapter(mThumbnailsAdapter);
+        ThumbnailsAdapter thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), R.layout.item_grid_movies, movies);
+        this.gridView.setAdapter(thumbnailsAdapter);
     }
 
     private void fetchMoviesData() {
@@ -96,16 +95,16 @@ public class MainFragment
         );
 
         // Only update data if previous filter is not the same as one in Shared Preferences
-        if (mFilteredBy == null || !mFilteredBy.equals(filter)) {
+        if (filteredBy == null || !filteredBy.equals(filter)) {
             // Update filter and fetch data
-            this.mMovies = new ArrayList<>();
-            mFilteredBy = filter;
+            this.movies = new ArrayList<>();
+            filteredBy = filter;
 
-            mTheMovieDBServiceManager.getMoviesData(filter, 1, new Callback<MoviesData>() {
+            movieDBServiceManager.getMoviesData(filter, 1, new Callback<MoviesData>() {
                 @Override
                 public void onResponse(Call<MoviesData> moviesDataCall, Response<MoviesData> response) {
                     if (response.isSuccessful()) {
-                        mMovies.addAll(response.body().getMovies());
+                        movies.addAll(response.body().getMovies());
                         setAdapter();
                     }
                 }

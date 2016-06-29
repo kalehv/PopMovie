@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.BuildConfig;
 import me.kalehv.popmovie.R;
@@ -76,9 +76,9 @@ public class ThumbnailsAdapter extends ArrayAdapter {
     }
 
     static class ViewHolder {
-        @Bind(R.id.imageview_movie_poster) ImageView image;
+        @BindView(R.id.imageview_movie_poster) ImageView image;
 
-        public ViewHolder(View view) {
+        ViewHolder(View view) {
             ButterKnife.bind(this, view);
         }
     }
