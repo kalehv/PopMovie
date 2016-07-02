@@ -18,33 +18,32 @@ public class TheMovieDBServiceManager {
 
     private final String TAG = TheMovieDBServiceManager.class.getSimpleName();
 
-    public static Retrofit mRetrofit = null;
-    public static TheMoviesDBApi mApi = null;
-    public static TheMovieDBServiceManager mServiceManager = null;
-    public static final String mApiKey = BuildConfig.THE_MOVIE_DB_API_KEY;
+    private static TheMoviesDBApi moviesDBApi = null;
+    private static TheMovieDBServiceManager movieDBServiceManager = null;
+    private static final String API_KEY = BuildConfig.THE_MOVIE_DB_API_KEY;
 
 
     private TheMovieDBServiceManager() {
-        mRetrofit = new Retrofit.Builder()
+        Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(C.THE_MOVIES_DB_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        mApi = mRetrofit.create(TheMoviesDBApi.class);
+        moviesDBApi = retrofit.create(TheMoviesDBApi.class);
     }
 
     public static TheMovieDBServiceManager getInstance() {
-        if (mServiceManager == null) {
-            mServiceManager = new TheMovieDBServiceManager();
+        if (movieDBServiceManager == null) {
+            movieDBServiceManager = new TheMovieDBServiceManager();
         }
-        return mServiceManager;
+        return movieDBServiceManager;
     }
 
     /*
         Movies
      */
     public void getMoviesData(String filter, int pageNum, Callback<MoviesData> callback) {
-        Call<MoviesData> moviesDataCall = mApi.getMoviesData(filter, pageNum, mApiKey);
+        Call<MoviesData> moviesDataCall = moviesDBApi.getMoviesData(filter, pageNum, API_KEY);
         moviesDataCall.enqueue(callback);
     }
 
@@ -52,7 +51,7 @@ public class TheMovieDBServiceManager {
         Videos
      */
     public void getMoviesVideos(int movieId, Callback<JsonObject> callback) {
-        Call<JsonObject> videoKeyCall = mApi.getMovieVideoKey(movieId, mApiKey);
+        Call<JsonObject> videoKeyCall = moviesDBApi.getMovieVideoKey(movieId, API_KEY);
         videoKeyCall.enqueue(callback);
     }
 
@@ -60,7 +59,7 @@ public class TheMovieDBServiceManager {
         Reviews
      */
     public void getReviewsData(int movieId, int pageNum, Callback<ReviewsData> callback) {
-        Call<ReviewsData> reviewsDataCall = mApi.getReviewsData(movieId, pageNum, mApiKey);
+        Call<ReviewsData> reviewsDataCall = moviesDBApi.getReviewsData(movieId, pageNum, API_KEY);
         reviewsDataCall.enqueue(callback);
     }
 }

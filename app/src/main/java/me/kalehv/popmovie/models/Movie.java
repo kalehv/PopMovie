@@ -6,11 +6,12 @@ package me.kalehv.popmovie.models;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.parceler.Parcel;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Parcel
 public class Movie {
 
     @SerializedName("poster_path")
@@ -54,8 +55,6 @@ public class Movie {
 
     @SerializedName("vote_average")
     private Double voteAverage;
-
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * @return The posterPath
@@ -252,13 +251,4 @@ public class Movie {
     public void setVoteAverage(Double voteAverage) {
         this.voteAverage = voteAverage;
     }
-
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
 }
