@@ -1,6 +1,5 @@
 package me.kalehv.popmovie;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.adapters.ThumbnailsAdapter;
-import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.Movie;
 import me.kalehv.popmovie.models.MoviesData;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
@@ -36,6 +34,10 @@ public class MainFragment
 
     private TheMovieDBServiceManager movieDBServiceManager;
     private String filteredBy;
+
+    public interface OnMovieItemClickListener {
+        void onMovieItemClick(Movie movie);
+    }
 
     public MainFragment() {
         movieDBServiceManager = TheMovieDBServiceManager.getInstance();
@@ -62,24 +64,11 @@ public class MainFragment
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         Movie movie = (Movie) adapterView.getItemAtPosition(i);
-        Intent detailIntent = new Intent(getActivity(), ScrollingActivity.class);
+        OnMovieItemClickListener listenerActivity = (OnMovieItemClickListener) getActivity();
 
-        if (movie != null) {
-            detailIntent.putExtra(C.EXTRAS_MOVIE_ID, movie.getId());
-            detailIntent.putExtra(C.EXTRAS_POSTER_PATH, movie.getPosterPath());
-            detailIntent.putExtra(C.EXTRAS_BACKDROP_PATH, movie.getBackdropPath());
-            detailIntent.putExtra(C.EXTRAS_TITLE, movie.getTitle());
-            detailIntent.putExtra(C.EXTRAS_OVERVIEW, movie.getOverview());
-            detailIntent.putExtra(C.EXTRAS_RELEASE_DATE_STRING, movie.getReleaseDate());
-            detailIntent.putExtra(C.EXTRAS_LANGUAGE, movie.getOriginalLanguage());
-            detailIntent.putExtra(C.EXTRAS_POPULARITY, movie.getPopularity());
-            detailIntent.putExtra(C.EXTRAS_VOTE_COUNT, movie.getVoteCount());
-            detailIntent.putExtra(C.EXTRAS_VOTE_AVERAGE, movie.getVoteAverage());
-            detailIntent.putExtra(C.EXTRAS_HAS_VIDEO, movie.getVideo());
-            detailIntent.putExtra(C.EXTRAS_IS_ADULT, movie.getAdult());
+        if (movie != null && listenerActivity != null) {
+            listenerActivity.onMovieItemClick(movie);
         }
-
-        startActivity(detailIntent);
     }
 
     private void setAdapter() {

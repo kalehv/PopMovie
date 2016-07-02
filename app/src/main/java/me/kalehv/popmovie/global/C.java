@@ -14,17 +14,6 @@ public class C {
     public static final String VIDEOS_YOUTUBE_KEY_NAME = "key";
     public static final String YOUTUBE_FORCE_FULLSCREEN = "force_fullscreen";
 
-
-    public static final String EXTRAS_MOVIE_ID = "id";
-    public static final String EXTRAS_POSTER_PATH = "posterPath";
-    public static final String EXTRAS_BACKDROP_PATH = "backdropPath";
-    public static final String EXTRAS_TITLE = "title";
-    public static final String EXTRAS_OVERVIEW = "overview";
-    public static final String EXTRAS_RELEASE_DATE_STRING = "releaseDate";
-    public static final String EXTRAS_LANGUAGE = "language";
-    public static final String EXTRAS_POPULARITY = "popularity";
-    public static final String EXTRAS_VOTE_COUNT = "voteCount";
-    public static final String EXTRAS_VOTE_AVERAGE = "voteAverage";
-    public static final String EXTRAS_HAS_VIDEO = "hasVideo";
-    public static final String EXTRAS_IS_ADULT = "isAdult";
+    // Parceler Keys
+    public static final String MOVIE_PARCEL = "MOVIE_PARCEL";
 }

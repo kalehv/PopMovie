@@ -9,6 +9,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="me.kalehv.popmovie.SettingsActivity">
 
-    <include layout="@layout/app_bar" />
+    <include layout="@layout/app_bar_main" />
 
 </RelativeLayout>
