@@ -8,7 +8,7 @@ import android.provider.BaseColumns;
 /**
  * Created by harshadkale on 5/17/16.
  */
-public class PopMoviesContract {
+public class MovieContract {
 
     public static final String CONTENT_AUTHORITY = "me.kalehv.popmovie.movies";
 
@@ -16,15 +16,16 @@ public class PopMoviesContract {
 
     public static final String PATH_MOVIE = "movie";
     public static final String PATH_POPULARITY = "popularity";
-    public static final String PATH_HIGHLY_RATED = "rating";
+    public static final String PATH_HIGHLY_RATED = "highly_rated";
+    public static final String PATH_TRAILER = "trailer";
     public static final String PATH_REVIEW = "review";
 
     public static final class MovieEntry implements BaseColumns {
         /* Content Provider */
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_MOVIE).build();
 
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_MOVIE;
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_MOVIE;
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_MOVIE;
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_MOVIE;
 
         /* Table */
         public static final String TABLE_NAME = "movie";
@@ -58,8 +59,8 @@ public class PopMoviesContract {
         /* Content Provider */
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_POPULARITY).build();
 
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_POPULARITY;
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_POPULARITY;
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_POPULARITY;
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_POPULARITY;
 
         /* Table */
         public static final String TABLE_NAME = "popularity";
@@ -86,8 +87,8 @@ public class PopMoviesContract {
         /* Content Provider */
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_HIGHLY_RATED).build();
 
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_HIGHLY_RATED;
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_HIGHLY_RATED;
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_HIGHLY_RATED;
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_HIGHLY_RATED;
 
         /* Table */
         public static final String TABLE_NAME = "highly_rated";
@@ -110,12 +111,42 @@ public class PopMoviesContract {
         }
     }
 
+    public static final class TrailerEntry implements BaseColumns {
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendEncodedPath(PATH_TRAILER).build();
+
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_TRAILER;
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_TRAILER;
+
+        /* Table */
+        public static final String TABLE_NAME = "trailer";
+
+        /* Columns */
+        // Primary Key
+        public static final String _ID = "_id";
+
+        // Foreign Key to Movie Table
+        public static final String COLUMN_MOVIE_KEY = "movie_id";
+        public static final String COLUMN_TRAILER_URL = "trailer_url";
+
+        public static Uri buildTrailerUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static Uri buildTrailerMovie(String movieId) {
+            return CONTENT_URI.buildUpon().appendPath(movieId).build();
+        }
+
+        public static String getMovieFromUri(Uri uri) {
+            return uri.getPathSegments().get(1);
+        }
+    }
+
     public static final class ReviewEntry implements BaseColumns {
         /* Content Provider */
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_REVIEW).build();
 
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_REVIEW;
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_REVIEW;
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_REVIEW;
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_REVIEW;
 
         /* Table */
         public static final String TABLE_NAME = "review";

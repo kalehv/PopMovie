@@ -56,6 +56,8 @@ public class Movie {
     @SerializedName("vote_average")
     private Double voteAverage;
 
+    private Boolean isFavorite;
+
     /**
      * @return The posterPath
      */
@@ -250,5 +252,19 @@ public class Movie {
      */
     public void setVoteAverage(Double voteAverage) {
         this.voteAverage = voteAverage;
+    }
+
+    /**
+     * @return The isFavorite
+     */
+    public Boolean getFavorite() {
+        return isFavorite;
+    }
+
+    /**
+     * @param favorite The isFavorite
+     */
+    public void setFavorite(Boolean favorite) {
+        isFavorite = favorite;
     }
 }
