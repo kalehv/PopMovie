@@ -18,6 +18,7 @@ import me.kalehv.popmovie.adapters.ThumbnailsAdapter;
 import me.kalehv.popmovie.models.Movie;
 import me.kalehv.popmovie.models.MoviesData;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
+import me.kalehv.popmovie.sync.MovieSyncAdapter;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -95,6 +96,7 @@ public class MainFragment
                     if (response.isSuccessful()) {
                         movies.addAll(response.body().getMovies());
                         setAdapter();
+                        MovieSyncAdapter.syncImmediately(getActivity());
                     }
                 }
 
