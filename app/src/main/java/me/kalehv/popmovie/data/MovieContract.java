@@ -32,7 +32,6 @@ public class MovieContract {
 
         /* Columns */
         // Primary Key
-        public static final String _ID = "_id";
         public static final String COLUMN_MOVIE_KEY = "movie_id";
         public static final String COLUMN_POSTER_PATH = "poster_path";
         public static final String COLUMN_BACKDROP_PATH = "backdrop_path";
@@ -42,7 +41,10 @@ public class MovieContract {
         public static final String COLUMN_OVERVIEW = "overview";
         public static final String COLUMN_RELEASE_DATE = "release_date";
         public static final String COLUMN_VOTE_AVERAGE = "vote_average";
+        public static final String COLUMN_POPULARITY = "popularity";
         public static final String COLUMN_FAVORITE = "favorite";
+        public static final String COLUMN_POPULAR_PAGE_NUMBER = "popular_page_number";
+        public static final String COLUMN_RATING_PAGE_NUMBER = "rating_page_number";
 
         /* Uri Builders */
         public static Uri buildMovieUri(long id) {
@@ -51,62 +53,6 @@ public class MovieContract {
 
         /* Getters */
         public static String getMovieFromUri(Uri uri) {
-            return uri.getPathSegments().get(1);
-        }
-    }
-
-    public static final class PopularityEntry implements BaseColumns {
-        /* Content Provider */
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_POPULARITY).build();
-
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_POPULARITY;
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_POPULARITY;
-
-        /* Table */
-        public static final String TABLE_NAME = "popularity";
-
-        /* Columns */
-        // Primary Key
-        public static final String _ID = "_id";
-        // Foreign Key to Movie Table
-        public static final String COLUMN_MOVIE_KEY = "movie_id";
-
-        /* Uri Builders */
-        // Review for id
-        public static Uri buildPopularityUri(long id) {
-            return ContentUris.withAppendedId(CONTENT_URI, id);
-        }
-
-        /* Getters */
-        public static String getPopularMovieFromUri(Uri uri) {
-            return uri.getPathSegments().get(1);
-        }
-    }
-
-    public static final class HighlyRatedEntry implements BaseColumns {
-        /* Content Provider */
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_HIGHLY_RATED).build();
-
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_HIGHLY_RATED;
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_HIGHLY_RATED;
-
-        /* Table */
-        public static final String TABLE_NAME = "highly_rated";
-
-        /* Columns */
-        // Primary Key
-        public static final String _ID = "_id";
-        // Foreign Key to Movie Table
-        public static final String COLUMN_MOVIE_KEY = "movie_id";
-
-        /* Uri Builders */
-        // Review for id
-        public static Uri buildHighlyRatedUri(long id) {
-            return ContentUris.withAppendedId(CONTENT_URI, id);
-        }
-
-        /* Getters */
-        public static String getHighlyRatedMovieFromUri(Uri uri) {
             return uri.getPathSegments().get(1);
         }
     }
@@ -121,9 +67,6 @@ public class MovieContract {
         public static final String TABLE_NAME = "trailer";
 
         /* Columns */
-        // Primary Key
-        public static final String _ID = "_id";
-
         // Foreign Key to Movie Table
         public static final String COLUMN_MOVIE_KEY = "movie_id";
         public static final String COLUMN_TRAILER_URL = "trailer_url";
@@ -152,8 +95,6 @@ public class MovieContract {
         public static final String TABLE_NAME = "review";
 
         /* Columns */
-        // Primary Key
-        public static final String _ID = "_id";
         // Foreign Key to Movie Table
         public static final String COLUMN_MOVIE_KEY = "movie_id";
         public static final String COLUMN_AUTHOR = "author";

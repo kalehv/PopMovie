@@ -124,7 +124,7 @@ public class DetailActivity extends ToolbarAppCompatActivity {
     private void setupHeaderView() {
         String backdropPath = selectedMovie.getBackdropPath();
         Picasso.with(this)
-                .load(C.BACKDROP_IMAGE_BASE_URL + backdropPath)
+                .load(backdropPath)
                 .into(imageViewHeader);
     }
 
@@ -186,7 +186,7 @@ public class DetailActivity extends ToolbarAppCompatActivity {
 
     private void fetchVideoKey() {
         if (movieDBServiceManager != null) {
-            int movieId = selectedMovie.getId();
+            int movieId = selectedMovie.getMovieId();
             if (movieId != -1) {
                 movieDBServiceManager.getMoviesVideos(movieId, new Callback<JsonObject>() {
                     @Override

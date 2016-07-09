@@ -5,10 +5,10 @@
     <!-- Device Permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!--Accounts Permissions-->
+    <!-- Accounts Permissions -->
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 
-    <!--SyncAdapter Permissions-->
+    <!-- SyncAdapter Permissions -->
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
 
@@ -20,14 +20,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".LaunchActivity"
+            android:theme="@style/AppTheme.LaunchScreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
         </activity>
         <activity
             android:name=".SettingsActivity"
@@ -51,7 +54,7 @@
             android:exported="false"
             android:syncable="true"/>
 
-        <!--The SyncAdapter Dummy authentication service-->
+        <!-- The SyncAdapter Dummy authentication service -->
         <service android:name=".sync.MovieAuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator"/>
@@ -61,8 +64,7 @@
                 android:resource="@xml/authenticator"/>
         </service>
 
-
-        <!--The SyncAdapter Service-->
+        <!-- The SyncAdapter Service -->
         <service
             android:name=".sync.MovieSyncService"
             android:exported="true">
@@ -73,7 +75,6 @@
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter"/>
         </service>
-
 
     </application>
 

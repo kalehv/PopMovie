@@ -98,7 +98,7 @@ public class DetailFragment
     private void fetchReviews() {
         reviews = new ArrayList<>();
         if (movieDBServiceManager != null) {
-            int movieId = selectedMovie.getId();
+            int movieId = selectedMovie.getMovieId();
             if (movieId != -1) {
                 movieDBServiceManager.getReviewsData(movieId, 1, new Callback<ReviewsData>() {
                     @Override
@@ -130,7 +130,7 @@ public class DetailFragment
 
         String posterPath = selectedMovie.getPosterPath();
         Picasso.with(getActivity())
-                .load(C.POSTER_IMAGE_BASE_URL + posterPath)
+                .load(posterPath)
                 .into(imageViewMovieDetailPoster);
 
         textViewMovieTitle.setText(selectedMovie.getTitle());

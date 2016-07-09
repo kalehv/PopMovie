@@ -28,4 +28,9 @@
         <item name="android:visibility">gone</item>
     </style>
 
+    <!--Launch Screen-->
+    <style name="AppTheme.LaunchScreen" parent="AppTheme.NoActionBar">
+        <item name="android:windowBackground">@drawable/launch_screen</item>
+    </style>
+
 </resources>
