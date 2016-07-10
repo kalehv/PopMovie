@@ -24,8 +24,9 @@ public class MainFragment
         implements GridView.OnItemClickListener {
     @BindView(R.id.gridview_thumbnails) GridView gridView;
 
-    private ArrayList<Movie> movies;
+    private static final String FILTER_BY = "filter";
 
+    private ArrayList<Movie> movies;
     private TheMovieDBServiceManager movieDBServiceManager;
     private String filteredBy;
 
@@ -34,7 +35,15 @@ public class MainFragment
     }
 
     public MainFragment() {
-        movieDBServiceManager = TheMovieDBServiceManager.getInstance();
+        this.movieDBServiceManager = TheMovieDBServiceManager.getInstance();
+    }
+
+    public static MainFragment newInstance(String filter) {
+        Bundle args = new Bundle();
+        args.putString(FILTER_BY, filter);
+        MainFragment mainFragment = new MainFragment();
+        mainFragment.setArguments(args);
+        return mainFragment;
     }
 
     @Override

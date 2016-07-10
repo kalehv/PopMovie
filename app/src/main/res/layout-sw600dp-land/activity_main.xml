@@ -21,21 +21,9 @@
             android:divider="?android:attr/dividerHorizontal"
             android:orientation="horizontal">
 
-            <fragment
-                android:id="@+id/fragment_main"
-                android:name="me.kalehv.popmovie.MainFragment"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                tools:layout="@layout/fragment_main"/>
+            <include layout="@layout/content_main"/>
 
-            <FrameLayout
-                android:id="@+id/fragment_detail_container"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-            </FrameLayout>
+            <include layout="@layout/content_detail"/>
 
         </LinearLayout>
 

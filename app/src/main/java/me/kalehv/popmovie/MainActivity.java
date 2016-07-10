@@ -4,12 +4,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import org.parceler.Parcels;
 
+import butterknife.BindView;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.Movie;
 
@@ -17,10 +20,14 @@ public class MainActivity
         extends ToolbarAppCompatActivity
         implements MainFragment.OnMovieItemClickListener    {
 
+    private static final String SELECTED_TAB_POSITION = "SELECTED_TAB_POSITION";
     private static final String DETAIL_FRAGMENT_TAG = "DETAIL_FRAGMENT_TAG";
     private static final int DETAIL_RESULT_REQUEST_CODE = 1001;
 
     private Movie selectedMovie;
+
+    @BindView(R.id.viewpager_filter_tabs) ViewPager viewPager;
+    @BindView(R.id.tabs_movies_filter) TabLayout tabLayout;
 
     @Override
     protected int getLayoutResourceId() {
@@ -30,6 +37,16 @@ public class MainActivity
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FilterFragmentPageAdapter pageAdapter = new FilterFragmentPageAdapter(getSupportFragmentManager(), MainActivity.this);
+        viewPager.setAdapter(pageAdapter);
+        tabLayout.setupWithViewPager(viewPager);
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab tab = tabLayout.getTabAt(i);
+            if (tab != null) {
+                tab.setIcon(pageAdapter.getIcon(i));
+            }
+        }
 
         // Running in split master-detail mode (Landscape tablet)
         if (getResources().getBoolean(R.bool.has_two_panes)) {
@@ -53,6 +70,7 @@ public class MainActivity
     protected void onSaveInstanceState(Bundle outState) {
         Parcelable movieParcel = Parcels.wrap(selectedMovie);
         outState.putParcelable(C.MOVIE_PARCEL, movieParcel);
+        outState.putInt(SELECTED_TAB_POSITION, tabLayout.getSelectedTabPosition());
 
         super.onSaveInstanceState(outState);
     }
@@ -60,6 +78,7 @@ public class MainActivity
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+        viewPager.setCurrentItem(savedInstanceState.getInt(SELECTED_TAB_POSITION, 0));
 
         Parcelable movieParcel = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
         selectedMovie = Parcels.unwrap(movieParcel);
