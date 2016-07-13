@@ -16,6 +16,7 @@
     <string name="pref_filter_top_rated">top_rated</string>
     <string name="pref_filter_popular">popular</string>
     <string name="pref_filter_favorite">favorite</string>
+    <string name="pref_filter_unknown">unknown</string>
 
     <!--Titles-->
     <string name="title_activity_main">Movies</string>

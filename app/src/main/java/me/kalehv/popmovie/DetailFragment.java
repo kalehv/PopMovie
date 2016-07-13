@@ -1,8 +1,13 @@
 package me.kalehv.popmovie;
 
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -16,8 +21,6 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import org.parceler.Parcels;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,25 +31,22 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.adapters.ReviewsAdapter;
+import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.models.Movie;
 import me.kalehv.popmovie.models.Review;
-import me.kalehv.popmovie.models.ReviewsData;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * Created by harshadkale on 6/28/16.
  */
 
 public class DetailFragment
-        extends Fragment {
+        extends Fragment
+        implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final String TAG = DetailFragment.class.getSimpleName();
 
-    private Movie selectedMovie;
+    private static final int MOVIE_LOADER = 0;
 
     @BindView(R.id.imageview_movie_detail_poster) ImageView imageViewMovieDetailPoster;
     @BindView(R.id.textview_movie_overview) TextView textViewOverview;
@@ -56,11 +56,30 @@ public class DetailFragment
     @BindView(R.id.recyclerview_movie_review) RecyclerView recyclerViewMovieReviews;
 
     private Bundle args;
+    private Uri selectedMovieUri;
     private TheMovieDBServiceManager movieDBServiceManager;
     private ArrayList<Review> reviews;
 
     public DetailFragment() {
         movieDBServiceManager = TheMovieDBServiceManager.getInstance();
+    }
+
+    public interface DataLoaderCallback {
+        public void OnDataLoaded(Cursor data);
+    }
+
+    private void setAdapter() {
+        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(getActivity(), reviews);
+        recyclerViewMovieReviews.setAdapter(reviewsAdapter);
+
+        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -75,88 +94,83 @@ public class DetailFragment
         // in that case there is no data sent by MainActivity to DetailActivity
         // Do not populate views if there is no data passed by MainActivity.
         if (args != null) {
-            Parcelable movieParcel = args.getParcelable(C.MOVIE_PARCEL);
-            selectedMovie = Parcels.unwrap(movieParcel);
-
-            if (selectedMovie != null) {
-                setupView();
-                fetchReviews();
-            }
+            selectedMovieUri = args.getParcelable(C.MOVIE_PARCEL);
         }
 
         return rootView;
     }
 
-    private void setAdapter() {
-        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(getActivity(), reviews);
-        recyclerViewMovieReviews.setAdapter(reviewsAdapter);
-
-        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (selectedMovieUri != null) {
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    selectedMovieUri,
+                    C.SELECT_ALL_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
     }
 
-    private void fetchReviews() {
-        reviews = new ArrayList<>();
-        if (movieDBServiceManager != null) {
-            int movieId = selectedMovie.getMovieId();
-            if (movieId != -1) {
-                movieDBServiceManager.getReviewsData(movieId, 1, new Callback<ReviewsData>() {
-                    @Override
-                    public void onResponse(Call<ReviewsData> moviesDataCall, Response<ReviewsData> response) {
-                        if (response.isSuccessful()) {
-                            reviews.addAll(response.body().getReviews());
-                            setAdapter();
-                        }
-                    }
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data != null && data.moveToFirst()) {
+            if (!getResources().getBoolean(R.bool.has_two_panes)) {
+                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                        (int) getResources().getDimension(R.dimen.width_poster_image),
+                        (int) getResources().getDimension(R.dimen.height_poster_image)
+                );
+                float standardMargin = getResources().getDimension(R.dimen.margin_standard);
+                float topMargin = getResources().getDimension(R.dimen.negative_poster_top_margin);
+                layoutParams.setMargins((int) standardMargin, (int) topMargin, (int) standardMargin, 0);
+                imageViewMovieDetailPoster.setLayoutParams(layoutParams);
+            }
 
-                    @Override
-                    public void onFailure(Call<ReviewsData> reviewsDataCall, Throwable t) {}
-                });
+            String posterPath = data.getString(MovieContract.MovieEntry.COL_INDEX_POSTER_PATH);
+            Picasso.with(getActivity())
+                    .load(posterPath)
+                    .into(imageViewMovieDetailPoster);
+
+            textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
+            textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
+
+            String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
+            DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            fromFormat.setLenient(false);
+            DateFormat toFormat = DateFormat.getDateInstance();
+            toFormat.setLenient(false);
+            try {
+                Date date = fromFormat.parse(releaseDate);
+                releaseDate = toFormat.format(date);
+            } catch (ParseException e) {
+                Log.e(TAG, "setupView: Date parse exception", e);
+            }
+
+            String releaseAdult = releaseDate;
+            if (data.getInt(MovieContract.MovieEntry.COL_INDEX_ADULT) == 1) {
+                releaseAdult += "   " + getResources().getString(R.string.indicator_adult_movie);
+            } else {
+                releaseAdult += "   " + getResources().getString(R.string.indicator_universal_movie);
+            }
+
+            ratingBarMovieRating.setRating((float) (data.getDouble(MovieContract.MovieEntry.COL_INDEX_VOTE_AVERAGE) / 2.0f));
+
+            textViewMovieReleaseAdult.setText(releaseAdult);
+
+            DataLoaderCallback listenerActivity = (DataLoaderCallback) getActivity();
+            if (listenerActivity != null) {
+                listenerActivity.OnDataLoaded(data);
             }
         }
     }
 
-    private void setupView() {
-        if (!getResources().getBoolean(R.bool.has_two_panes)) {
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                    (int) getResources().getDimension(R.dimen.width_poster_image),
-                    (int) getResources().getDimension(R.dimen.height_poster_image)
-            );
-            float standardMargin = getResources().getDimension(R.dimen.margin_standard);
-            float topMargin = getResources().getDimension(R.dimen.negative_poster_top_margin);
-            layoutParams.setMargins((int) standardMargin, (int) topMargin, (int) standardMargin, 0);
-            imageViewMovieDetailPoster.setLayoutParams(layoutParams);
-        }
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
 
-        String posterPath = selectedMovie.getPosterPath();
-        Picasso.with(getActivity())
-                .load(posterPath)
-                .into(imageViewMovieDetailPoster);
-
-        textViewMovieTitle.setText(selectedMovie.getTitle());
-        textViewOverview.setText(selectedMovie.getOverview());
-
-        String releaseDate = selectedMovie.getReleaseDate();
-        DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        fromFormat.setLenient(false);
-        DateFormat toFormat = DateFormat.getDateInstance();
-        toFormat.setLenient(false);
-        try {
-            Date date = fromFormat.parse(releaseDate);
-            releaseDate = toFormat.format(date);
-        } catch (ParseException e) {
-            Log.e(TAG, "setupView: Date parse exception", e);
-        }
-
-        String releaseAdult = releaseDate;
-        if (selectedMovie.getAdult()) {
-            releaseAdult += "   " + getResources().getString(R.string.indicator_adult_movie);
-        } else {
-            releaseAdult += "   " + getResources().getString(R.string.indicator_universal_movie);
-        }
-
-        ratingBarMovieRating.setRating((float) (selectedMovie.getVoteAverage() / 2.0f));
-
-        textViewMovieReleaseAdult.setText(releaseAdult);
     }
 }

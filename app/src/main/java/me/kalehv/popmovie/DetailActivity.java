@@ -1,9 +1,9 @@
 package me.kalehv.popmovie;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -23,18 +23,18 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.squareup.picasso.Picasso;
 
-import org.parceler.Parcels;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.models.Movie;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetailActivity extends ToolbarAppCompatActivity {
+public class DetailActivity
+        extends ToolbarAppCompatActivity
+        implements DetailFragment.DataLoaderCallback {
 
     private final String TAG = DetailActivity.class.getSimpleName();
 
@@ -49,7 +49,7 @@ public class DetailActivity extends ToolbarAppCompatActivity {
     private int actionBarHeight;
     private Intent incomingIntent;
     private TheMovieDBServiceManager movieDBServiceManager;
-    private Movie selectedMovie;
+    private Uri selectedMovieUri;
 
     public DetailActivity() {
         movieDBServiceManager = TheMovieDBServiceManager.getInstance();
@@ -66,8 +66,7 @@ public class DetailActivity extends ToolbarAppCompatActivity {
 
         if (getResources().getBoolean(R.bool.has_two_panes)) {
             if (savedInstanceState != null) {
-                Parcelable movieParcel = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
-                selectedMovie = Parcels.unwrap(movieParcel);
+                selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
                 setResultData();
             }
 
@@ -79,11 +78,10 @@ public class DetailActivity extends ToolbarAppCompatActivity {
 
         incomingIntent = getIntent();
         if (incomingIntent.getExtras() != null) {
-            Parcelable movieParcel = incomingIntent.getParcelableExtra(C.MOVIE_PARCEL);
-            selectedMovie = Parcels.unwrap(movieParcel);
+            selectedMovieUri = incomingIntent.getParcelableExtra(C.MOVIE_PARCEL);
 
             Bundle args = new Bundle();
-            args.putParcelable(C.MOVIE_PARCEL, movieParcel);
+            args.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
 
             DetailFragment detailFragment = new DetailFragment();
             detailFragment.setArguments(args);
@@ -92,17 +90,11 @@ public class DetailActivity extends ToolbarAppCompatActivity {
                     .replace(R.id.fragment_detail_container, detailFragment)
                     .commit();
         }
-
-        fetchVideoKey();
-
-        setupHeaderView();
-        setupActionBar();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        Parcelable movieParcel = Parcels.wrap(selectedMovie);
-        outState.putParcelable(C.MOVIE_PARCEL, movieParcel);
+        outState.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
 
         super.onSaveInstanceState(outState);
     }
@@ -111,24 +103,25 @@ public class DetailActivity extends ToolbarAppCompatActivity {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
+        selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
+    }
 
+    private void setupHeaderView(Cursor data) {
+        if (data != null && data.moveToFirst()) {
+            String backdropPath = data.getString(MovieContract.MovieEntry.COL_INDEX_BACKDROP_PATH);
+            Picasso.with(this)
+                    .load(backdropPath)
+                    .into(imageViewHeader);
+        }
     }
 
     private void setResultData() {
         Intent resultIntent = new Intent();
-        Parcelable movieParcel = Parcels.wrap(selectedMovie);
-        resultIntent.putExtra(C.MOVIE_PARCEL, movieParcel);
+        resultIntent.putExtra(C.MOVIE_PARCEL, selectedMovieUri);
         setResult(RESULT_OK, resultIntent);
     }
 
-    private void setupHeaderView() {
-        String backdropPath = selectedMovie.getBackdropPath();
-        Picasso.with(this)
-                .load(backdropPath)
-                .into(imageViewHeader);
-    }
-
-    private void setupActionBar() {
+    private void setupActionBar(final Cursor data) {
         setSupportActionBar(toolbar);
 
         ActionBar actionBar = getSupportActionBar();
@@ -140,7 +133,6 @@ public class DetailActivity extends ToolbarAppCompatActivity {
         if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
             actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
         }
-
 
         // Set expanded appbar height to aspect ratio of 3:2
         // Ref - http://stackoverflow.com/a/31362835/906577
@@ -160,7 +152,7 @@ public class DetailActivity extends ToolbarAppCompatActivity {
                 }
                 // Only display title when toolbar is displayed with size greater than equal to action bar
                 if (scrollRange + verticalOffset <= actionBarHeight && scrollRange + verticalOffset >= 0) {
-                    collapsingToolbarLayout.setTitle(selectedMovie.getTitle());
+                    collapsingToolbarLayout.setTitle(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
                     isShow = true;
                 } else if (isShow) {
                     collapsingToolbarLayout.setTitle("");
@@ -184,9 +176,9 @@ public class DetailActivity extends ToolbarAppCompatActivity {
         }
     }
 
-    private void fetchVideoKey() {
-        if (movieDBServiceManager != null) {
-            int movieId = selectedMovie.getMovieId();
+    private void fetchVideoKey(Cursor data) {
+        if (movieDBServiceManager != null && data != null) {
+            int movieId = data.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
             if (movieId != -1) {
                 movieDBServiceManager.getMoviesVideos(movieId, new Callback<JsonObject>() {
                     @Override
@@ -234,6 +226,15 @@ public class DetailActivity extends ToolbarAppCompatActivity {
                     });
                 }
             });
+        }
+    }
+
+    @Override
+    public void OnDataLoaded(Cursor data) {
+        if (data != null) {
+            setupHeaderView(data);
+            setupActionBar(data);
+            fetchVideoKey(data);
         }
     }
 }

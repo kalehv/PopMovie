@@ -6,6 +6,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.util.Log;
 
+import me.kalehv.popmovie.global.MoviesFilter;
+
 /**
  * Created by hk022893 on 7/9/16.
  */
@@ -40,14 +42,15 @@ public class FilterFragmentPageAdapter
     public Fragment getItem(int position) {
         Log.d(TAG, "getItem: Getting appropriate fragment for position - " + position);
         switch (position) {
-            case 0:
-                return MainFragment.newInstance(context.getString(R.string.pref_filter_popular));
-            case 1:
-                return MainFragment.newInstance(context.getString(R.string.pref_filter_top_rated));
-            case 2:
-                return MainFragment.newInstance(context.getString(R.string.pref_filter_favorite));
+            case MoviesFilter.POPULARITY:
+                return MainFragment.newInstance(MoviesFilter.POPULARITY);
+            case MoviesFilter.TOP_RATED:
+                return MainFragment.newInstance(MoviesFilter.TOP_RATED);
+            case MoviesFilter.FAVORITE:
+                return MainFragment.newInstance(MoviesFilter.FAVORITE);
+            default:
+                return MainFragment.newInstance(MoviesFilter.UNKNOWN);
         }
-        return null;
     }
 
     @Override

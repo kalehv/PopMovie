@@ -18,4 +18,6 @@ public class C {
 
     // Parceler Keys
     public static final String MOVIE_PARCEL = "MOVIE_PARCEL";
+
+    public static final String[] SELECT_ALL_COLUMNS = new String[]{"*"};
 }

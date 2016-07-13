@@ -88,8 +88,10 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
                 Movie movie = movieList.get(i);
                 if (filter.equals(getContext().getResources().getString(R.string.pref_filter_popular))) {
                     movie.setPopularPageNumber(pageNumber);
+                    movie.setRatingPageNumber(0);
                 } else {
                     movie.setRatingPageNumber(pageNumber);
+                    movie.setPopularPageNumber(0);
                 }
 
                 ContentValues movieValues = new ContentValues();

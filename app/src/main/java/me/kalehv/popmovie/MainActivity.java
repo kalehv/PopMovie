@@ -1,8 +1,8 @@
 package me.kalehv.popmovie;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
@@ -10,11 +10,8 @@ import android.support.v7.app.ActionBar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import org.parceler.Parcels;
-
 import butterknife.BindView;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.models.Movie;
 
 public class MainActivity
         extends ToolbarAppCompatActivity
@@ -24,7 +21,7 @@ public class MainActivity
     private static final String DETAIL_FRAGMENT_TAG = "DETAIL_FRAGMENT_TAG";
     private static final int DETAIL_RESULT_REQUEST_CODE = 1001;
 
-    private Movie selectedMovie;
+    private Uri selectedMovieUri;
 
     @BindView(R.id.viewpager_filter_tabs) ViewPager viewPager;
     @BindView(R.id.tabs_movies_filter) TabLayout tabLayout;
@@ -50,8 +47,8 @@ public class MainActivity
 
         // Running in split master-detail mode (Landscape tablet)
         if (getResources().getBoolean(R.bool.has_two_panes)) {
-            if (selectedMovie != null) {
-                loadDetailFragment(Parcels.wrap(selectedMovie));
+            if (selectedMovieUri!= null) {
+                loadDetailFragment(selectedMovieUri);
             }
         } else {
             ActionBar actionBar = getSupportActionBar();
@@ -68,8 +65,7 @@ public class MainActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        Parcelable movieParcel = Parcels.wrap(selectedMovie);
-        outState.putParcelable(C.MOVIE_PARCEL, movieParcel);
+        outState.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
         outState.putInt(SELECTED_TAB_POSITION, tabLayout.getSelectedTabPosition());
 
         super.onSaveInstanceState(outState);
@@ -80,34 +76,31 @@ public class MainActivity
         super.onRestoreInstanceState(savedInstanceState);
         viewPager.setCurrentItem(savedInstanceState.getInt(SELECTED_TAB_POSITION, 0));
 
-        Parcelable movieParcel = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
-        selectedMovie = Parcels.unwrap(movieParcel);
+        selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == DETAIL_RESULT_REQUEST_CODE) {
-            Parcelable movieParcel = data.getParcelableExtra(C.MOVIE_PARCEL);
-            if (movieParcel != null) {
-                selectedMovie = Parcels.unwrap(movieParcel);
+            selectedMovieUri = data.getParcelableExtra(C.MOVIE_PARCEL);
+            if (selectedMovieUri != null) {
                 if (getResources().getBoolean(R.bool.has_two_panes)) {
-                    loadDetailFragment(movieParcel);
+                    loadDetailFragment(selectedMovieUri);
                 }
             }
         }
     }
 
     @Override
-    public void onMovieItemClick(Movie movie) {
-        selectedMovie = movie;
-        Parcelable movieParcel = Parcels.wrap(movie);
+    public void onMovieItemClick(Uri uri) {
+        selectedMovieUri = uri;
 
-        if (movie != null && movieParcel != null) {
+        if (selectedMovieUri != null) {
             if (!getResources().getBoolean(R.bool.has_two_panes)) {
-                loadDetailActivity(movieParcel);
+                loadDetailActivity(selectedMovieUri);
             } else {
-                loadDetailFragment(movieParcel);
+                loadDetailFragment(selectedMovieUri);
             }
         }
     }
@@ -130,11 +123,11 @@ public class MainActivity
         return super.onOptionsItemSelected(item);
     }
 
-    private void loadDetailFragment(Parcelable movieParcel) {
+    private void loadDetailFragment(Uri movieUri) {
         // Add fragment only if there is any selected movie
-        if (movieParcel != null) {
+        if (movieUri != null) {
             Bundle args = new Bundle();
-            args.putParcelable(C.MOVIE_PARCEL, movieParcel);
+            args.putParcelable(C.MOVIE_PARCEL, movieUri);
 
             DetailFragment detailFragment = new DetailFragment();
             detailFragment.setArguments(args);
@@ -151,9 +144,9 @@ public class MainActivity
         }
     }
 
-    private void loadDetailActivity(Parcelable movieParcel) {
+    private void loadDetailActivity(Uri movieUri) {
         Intent detailIntent = new Intent(this, DetailActivity.class);
-        detailIntent.putExtra(C.MOVIE_PARCEL, movieParcel);
+        detailIntent.putExtra(C.MOVIE_PARCEL, movieUri);
 
         startActivityForResult(detailIntent, DETAIL_RESULT_REQUEST_CODE);
     }

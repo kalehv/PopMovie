@@ -14,24 +14,23 @@ public class MovieContract {
 
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
-    public static final String PATH_MOVIE = "movie";
-    public static final String PATH_POPULARITY = "popularity";
-    public static final String PATH_HIGHLY_RATED = "highly_rated";
+    public static final String PATH_MOVIES = "movies";
     public static final String PATH_TRAILER = "trailer";
     public static final String PATH_REVIEW = "review";
 
     public static final class MovieEntry implements BaseColumns {
         /* Content Provider */
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_MOVIE).build();
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_MOVIES).build();
 
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_MOVIE;
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_MOVIE;
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_MOVIES;
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_URI + "/" + PATH_MOVIES;
 
         /* Table */
         public static final String TABLE_NAME = "movie";
 
         /* Columns */
         // Primary Key
+        public static final String COLUMN_ID = "_ID";
         public static final String COLUMN_MOVIE_KEY = "movie_id";
         public static final String COLUMN_POSTER_PATH = "poster_path";
         public static final String COLUMN_BACKDROP_PATH = "backdrop_path";
@@ -45,6 +44,21 @@ public class MovieContract {
         public static final String COLUMN_FAVORITE = "favorite";
         public static final String COLUMN_POPULAR_PAGE_NUMBER = "popular_page_number";
         public static final String COLUMN_RATING_PAGE_NUMBER = "rating_page_number";
+
+        public static final int COL_INDEX_MOVIE_ID = 0;
+        public static final int COL_INDEX_MOVIE_KEY = 1;
+        public static final int COL_INDEX_POSTER_PATH = 2;
+        public static final int COL_INDEX_BACKDROP_PATH = 3;
+        public static final int COL_INDEX_TRAILER_PATH = 4;
+        public static final int COL_INDEX_ADULT = 5;
+        public static final int COL_INDEX_TITLE = 6;
+        public static final int COL_INDEX_OVERVIEW = 7;
+        public static final int COL_INDEX_RELEASE_DATE = 8;
+        public static final int COL_INDEX_VOTE_AVERAGE = 9;
+        public static final int COL_INDEX_POPULARITY = 10;
+        public static final int COL_INDEX_FAVORITE = 11;
+        public static final int COL_INDEX_POPULAR_PAGE_NUMBER = 12;
+        public static final int COL_INDEX_RATING_PAGE_NUMBER = 13;
 
         /* Uri Builders */
         public static Uri buildMovieUri(long id) {
@@ -68,8 +82,13 @@ public class MovieContract {
 
         /* Columns */
         // Foreign Key to Movie Table
+        public static final String COLUMN_ID = "_ID";
         public static final String COLUMN_MOVIE_KEY = "movie_id";
         public static final String COLUMN_TRAILER_URL = "trailer_url";
+
+        public static final int COL_INDEX_ID = 0;
+        public static final int COL_INDEX_MOVIE_KEY = 1;
+        public static final int COL_INDEX_TRAILER_URL = 2;
 
         public static Uri buildTrailerUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
@@ -96,9 +115,15 @@ public class MovieContract {
 
         /* Columns */
         // Foreign Key to Movie Table
+        public static final String COLUMN_ID = "_ID";
         public static final String COLUMN_MOVIE_KEY = "movie_id";
         public static final String COLUMN_AUTHOR = "author";
         public static final String COLUMN_CONTENT = "content";
+
+        public static final int COL_INDEX_ID = 0;
+        public static final int COL_INDEX_MOVIE_KEY = 1;
+        public static final int COL_INDEX_AUTHOR = 2;
+        public static final int COL_INDEX_CONTENT = 3;
 
         /* Uri Builders */
         // Review for id

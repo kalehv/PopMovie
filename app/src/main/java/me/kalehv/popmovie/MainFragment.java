@@ -1,46 +1,51 @@
 package me.kalehv.popmovie;
 
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.adapters.ThumbnailsAdapter;
-import me.kalehv.popmovie.models.Movie;
-import me.kalehv.popmovie.services.TheMovieDBServiceManager;
+import me.kalehv.popmovie.data.MovieContract;
+import me.kalehv.popmovie.data.MovieProvider;
+import me.kalehv.popmovie.global.C;
+import me.kalehv.popmovie.global.MoviesFilter;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainFragment
         extends Fragment
-        implements GridView.OnItemClickListener {
+        implements GridView.OnItemClickListener,
+        LoaderManager.LoaderCallbacks<Cursor> {
+
     @BindView(R.id.gridview_thumbnails) GridView gridView;
 
     private static final String FILTER_BY = "filter";
+    private int filterBy;
 
-    private ArrayList<Movie> movies;
-    private TheMovieDBServiceManager movieDBServiceManager;
-    private String filteredBy;
+    private ThumbnailsAdapter thumbnailsAdapter;
+
+    private static final int MOVIES_LOADER = 0;
 
     public interface OnMovieItemClickListener {
-        void onMovieItemClick(Movie movie);
+        void onMovieItemClick(Uri uri);
     }
 
-    public MainFragment() {
-        this.movieDBServiceManager = TheMovieDBServiceManager.getInstance();
-    }
-
-    public static MainFragment newInstance(String filter) {
+    public static MainFragment newInstance(int filter) {
         Bundle args = new Bundle();
-        args.putString(FILTER_BY, filter);
+        args.putInt(FILTER_BY, filter);
         MainFragment mainFragment = new MainFragment();
         mainFragment.setArguments(args);
         return mainFragment;
@@ -54,25 +59,82 @@ public class MainFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), null, 0);
+
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
+        gridView.setOnItemClickListener(this);
+
+        Bundle args = getArguments();
+        if (args != null) {
+            filterBy = args.getInt(FILTER_BY, MoviesFilter.UNKNOWN);
+        }
+
+        gridView.setAdapter(thumbnailsAdapter);
         gridView.setOnItemClickListener(this);
 
         return rootView;
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Movie movie = (Movie) adapterView.getItemAtPosition(i);
-        OnMovieItemClickListener listenerActivity = (OnMovieItemClickListener) getActivity();
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
 
-        if (movie != null && listenerActivity != null) {
-            listenerActivity.onMovieItemClick(movie);
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+        Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
+        if (cursor != null) {
+            OnMovieItemClickListener listenerActivity = (OnMovieItemClickListener) getActivity();
+            if (listenerActivity != null) {
+                long movieKey = cursor.getLong(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
+                listenerActivity.onMovieItemClick(MovieContract.MovieEntry.buildMovieUri(movieKey));
+            }
         }
     }
 
-    private void setAdapter() {
-        ThumbnailsAdapter thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), R.layout.item_grid_movies, movies);
-        this.gridView.setAdapter(thumbnailsAdapter);
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(MOVIES_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String sortOrder = null;
+        String selection;
+        switch (filterBy) {
+            case MoviesFilter.TOP_RATED:
+                selection = MovieProvider.topRatedMoviesSelection;
+                sortOrder = MovieProvider.topRatedMoviesSortOrder;
+                break;
+            case MoviesFilter.FAVORITE:
+                selection = MovieProvider.favoriteMoviesSelection;
+                break;
+            case MoviesFilter.POPULARITY:
+            default:
+                selection = MovieProvider.popularMoviesSelection;
+                sortOrder = MovieProvider.popularMoviesSortOrder;
+                break;
+        }
+
+        return new CursorLoader(
+                getActivity(),
+                MovieContract.MovieEntry.CONTENT_URI,
+                C.SELECT_ALL_COLUMNS,
+                selection,
+                null,
+                sortOrder
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        thumbnailsAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        thumbnailsAdapter.swapCursor(null);
     }
 }

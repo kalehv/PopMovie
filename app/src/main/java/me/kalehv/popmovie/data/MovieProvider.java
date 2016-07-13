@@ -16,6 +16,8 @@ import android.os.Build;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import me.kalehv.popmovie.global.C;
+
 /**
  * Created by hk022893 on 5/20/16.
  */
@@ -28,15 +30,8 @@ public class MovieProvider extends ContentProvider {
 
     private static final int MOVIES = 100;
     private static final int MOVIE_WITH_ID = 101;
-    private static final int MOVIES_POPULAR = 200;
-    private static final int MOVIES_HIGHLY_RATED = 300;
-    private static final int TRAILERS = 400;
-    private static final int REVIEWS = 500;
-
-    private static final int INDEX_COLUMN_ID = 0;
-    private static final int INDEX_COLUMN_IS_FAVORITE = 11;
-    private static final int INDEX_COLUMN_POPULAR_PAGE_NUMBER = 12;
-    private static final int INDEX_COLUMN_RATING_PAGE_NUMBER = 13;
+    private static final int TRAILERS = 200;
+    private static final int REVIEWS = 300;
 
     private static final SQLiteQueryBuilder movieQueryBuilder;
     private static final SQLiteQueryBuilder trailerByMovieQueryBuilder;
@@ -70,14 +65,25 @@ public class MovieProvider extends ContentProvider {
     }
 
     // Movie.MovieKey = ?
-    private static String movieByIdSelection = MovieContract.MovieEntry.TABLE_NAME +
+    public static String movieByKeySelection = MovieContract.MovieEntry.TABLE_NAME +
             "." + MovieContract.MovieEntry.COLUMN_MOVIE_KEY + " = ? ";
 
-    private static String trailerByMovieIdSelection = MovieContract.TrailerEntry.TABLE_NAME +
+    public static String popularMoviesSelection = MovieContract.MovieEntry.TABLE_NAME +
+            "." + MovieContract.MovieEntry.COLUMN_POPULAR_PAGE_NUMBER + " > 0 ";
+    public static final String popularMoviesSortOrder = MovieContract.MovieEntry.COLUMN_POPULARITY + " DESC";
+
+    public static String topRatedMoviesSelection = MovieContract.MovieEntry.TABLE_NAME +
+            "." + MovieContract.MovieEntry.COLUMN_RATING_PAGE_NUMBER + " > 0 ";
+    public static final String topRatedMoviesSortOrder = MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
+
+    public static String favoriteMoviesSelection = MovieContract.MovieEntry.TABLE_NAME +
+            "." + MovieContract.MovieEntry.COLUMN_FAVORITE + " = 1 ";
+
+    public static String trailerByMovieIdSelection = MovieContract.TrailerEntry.TABLE_NAME +
             "." + MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + " = ? ";
 
     // Review.MovieKey = ?
-    private static String reviewByMovieIdSelection = MovieContract.ReviewEntry.TABLE_NAME +
+    public static String reviewByMovieIdSelection = MovieContract.ReviewEntry.TABLE_NAME +
             "." + MovieContract.ReviewEntry.COLUMN_MOVIE_KEY + " = ? ";
 
 
@@ -86,13 +92,9 @@ public class MovieProvider extends ContentProvider {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
 
         // GET Movies
-        matcher.addURI(authority, MovieContract.PATH_MOVIE, MOVIES);
-        // GET Popular Movies
-        matcher.addURI(authority, MovieContract.PATH_POPULARITY, MOVIES_POPULAR);
-        // GET Highly Rated Movies
-        matcher.addURI(authority, MovieContract.PATH_HIGHLY_RATED, MOVIES_HIGHLY_RATED);
+        matcher.addURI(authority, MovieContract.PATH_MOVIES, MOVIES);
         // GET Movie/Id
-        matcher.addURI(authority, MovieContract.PATH_MOVIE + "/#", MOVIE_WITH_ID);
+        matcher.addURI(authority, MovieContract.PATH_MOVIES + "/#", MOVIE_WITH_ID);
         // GET Trailer/MovieId
         matcher.addURI(authority, MovieContract.PATH_TRAILER + "/#", TRAILERS);
         // GET Review/MovieId
@@ -102,44 +104,24 @@ public class MovieProvider extends ContentProvider {
     }
 
     // TODO: NOT SURE IF THIS WILL WORK
-    private Cursor getMovies(Uri uri, String sortOrder) {
+    private Cursor getMovies(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         return movieQueryBuilder.query(dbHelper.getReadableDatabase(),
-                new String[]{"*"},
-                null,
-                null,
+                projection,
+                selection,
+                selectionArgs,
                 null,
                 null,
                 sortOrder);
     }
 
-    private Cursor getPopularMovies() {
-        return movieQueryBuilder.query(dbHelper.getReadableDatabase(),
-                new String[]{"*"},
-                null,
-                null,
-                null,
-                null,
-                "DESC");
-    }
-
-    private Cursor getHighlyRatedMovies() {
-        return movieQueryBuilder.query(dbHelper.getReadableDatabase(),
-                new String[]{"*"},
-                null,
-                null,
-                null,
-                null,
-                "DESC");
-    }
-
-    private Cursor getMovieById(Uri uri) {
+    private Cursor getMovieByKey(Uri uri) {
         String _movieId = String.valueOf(ContentUris.parseId(uri));
 
         String[] selectionArgs = new String[]{_movieId};
-        String selection = movieByIdSelection;
+        String selection = movieByKeySelection;
 
         return movieQueryBuilder.query(dbHelper.getReadableDatabase(),
-                new String[]{"*"},
+                C.SELECT_ALL_COLUMNS,
                 selection,
                 selectionArgs,
                 null,
@@ -190,8 +172,6 @@ public class MovieProvider extends ContentProvider {
 
         switch (match) {
             case MOVIES:
-            case MOVIES_POPULAR:
-            case MOVIES_HIGHLY_RATED:
                 return MovieContract.MovieEntry.CONTENT_DIR_TYPE;
             case MOVIE_WITH_ID:
                 return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
@@ -210,16 +190,10 @@ public class MovieProvider extends ContentProvider {
         Cursor cursor;
         switch (uriMatcher.match(uri)) {
             case MOVIES:
-                cursor = getMovies(uri, sortOrder);
-                break;
-            case MOVIES_POPULAR:
-                cursor = getPopularMovies();
-                break;
-            case MOVIES_HIGHLY_RATED:
-                cursor = getHighlyRatedMovies();
+                cursor = getMovies(uri, projection, selection, selectionArgs, sortOrder);
                 break;
             case MOVIE_WITH_ID:
-                cursor = getMovieById(uri);
+                cursor = getMovieByKey(uri);
                 break;
             case TRAILERS:
                 cursor = getTrailersByMovie(uri, projection, sortOrder);
@@ -429,17 +403,20 @@ public class MovieProvider extends ContentProvider {
     private void updateExistingRow(SQLiteDatabase db, ContentValues value) {
         int movieKey = (int) value.get(MovieContract.MovieEntry.COLUMN_MOVIE_KEY);
         Uri movieUri = MovieContract.MovieEntry.buildMovieUri(movieKey);
-        Cursor cursor = getMovieById(movieUri);
+        Cursor cursor = getMovieByKey(movieUri);
         if (cursor.moveToFirst()) {
-            int movieId = cursor.getInt(INDEX_COLUMN_ID);
-            int existingPopularPageNumber = cursor.getInt(INDEX_COLUMN_POPULAR_PAGE_NUMBER);
-            int existingRatingPageNumber = cursor.getInt(INDEX_COLUMN_RATING_PAGE_NUMBER);
-            int existingFavorite = cursor.getInt(INDEX_COLUMN_IS_FAVORITE);
+            int movieId = cursor.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_ID);
+            int existingPopularPageNumber = cursor.getInt(MovieContract.MovieEntry.COL_INDEX_POPULAR_PAGE_NUMBER);
+            int existingRatingPageNumber = cursor.getInt(MovieContract.MovieEntry.COL_INDEX_RATING_PAGE_NUMBER);
+            int existingFavorite = cursor.getInt(MovieContract.MovieEntry.COL_INDEX_FAVORITE);
 
             // Update values
-            if (value.get(MovieContract.MovieEntry.COLUMN_POPULAR_PAGE_NUMBER) == null && existingPopularPageNumber > 0) {
+            int valuePopularityPageNumber = (int) value.get(MovieContract.MovieEntry.COLUMN_POPULAR_PAGE_NUMBER);
+            int valueRatingPageNumber = (int) value.get(MovieContract.MovieEntry.COLUMN_RATING_PAGE_NUMBER);
+
+            if (valuePopularityPageNumber == 0 && existingPopularPageNumber > 0) {
                 value.put(MovieContract.MovieEntry.COLUMN_POPULAR_PAGE_NUMBER, existingPopularPageNumber);
-            } else if (value.get(MovieContract.MovieEntry.COLUMN_RATING_PAGE_NUMBER) == null && existingRatingPageNumber > 0) {
+            } else if (valueRatingPageNumber == 0 && existingRatingPageNumber > 0) {
                 value.put(MovieContract.MovieEntry.COLUMN_RATING_PAGE_NUMBER, existingRatingPageNumber);
             }
             value.put(MovieContract.MovieEntry.COLUMN_FAVORITE, existingFavorite);
