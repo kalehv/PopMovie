@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,17 +22,14 @@ import com.squareup.picasso.Picasso;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import me.kalehv.popmovie.adapters.ReviewsAdapter;
 import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.models.Review;
-import me.kalehv.popmovie.services.TheMovieDBServiceManager;
+import me.kalehv.popmovie.sync.MovieSyncAdapter;
 
 /**
  * Created by harshadkale on 6/28/16.
@@ -41,7 +37,7 @@ import me.kalehv.popmovie.services.TheMovieDBServiceManager;
 
 public class DetailFragment
         extends Fragment
-        implements LoaderManager.LoaderCallbacks<Cursor> {
+        implements LoaderManager.LoaderCallbacks<Cursor>, MovieSyncAdapter.OnSyncListener {
 
     private final String TAG = DetailFragment.class.getSimpleName();
 
@@ -70,24 +66,18 @@ public class DetailFragment
 
     private Bundle args;
     private Uri selectedMovieUri;
-    private int actionBarHeight;
-    private TheMovieDBServiceManager movieDBServiceManager;
-    private ArrayList<Review> reviews;
 
-    public DetailFragment() {
-        movieDBServiceManager = TheMovieDBServiceManager.getInstance();
-    }
-
-    public interface DataLoaderCallback {
-        public void OnDataLoaded(Cursor data);
-    }
-
-    private void setAdapter() {
-        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(getActivity(), reviews);
-        recyclerViewMovieReviews.setAdapter(reviewsAdapter);
-
-        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
+//    private void setAdapter() {
+//        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(getActivity(), reviews);
+//        recyclerViewMovieReviews.setAdapter(reviewsAdapter);
+//
+//        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(getActivity()));
+//        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
+//    }
+    
+    @Override
+    public void onSyncComplete() {
+        MovieSyncAdapter.removeListener(getContext());
     }
 
     @Override
@@ -109,6 +99,7 @@ public class DetailFragment
         // Do not populate views if there is no data passed by MainActivity.
         if (args != null) {
             selectedMovieUri = args.getParcelable(C.MOVIE_PARCEL);
+            MovieSyncAdapter.addListener(getContext());
         }
 
         return rootView;
