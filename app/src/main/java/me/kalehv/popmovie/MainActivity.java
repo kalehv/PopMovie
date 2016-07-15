@@ -4,50 +4,48 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import me.kalehv.popmovie.global.C;
+import me.kalehv.popmovie.utils.Utility;
 
 public class MainActivity
-        extends ToolbarAppCompatActivity
-        implements MainFragment.OnMovieItemClickListener    {
+        extends AppCompatActivity
+        implements MainFragment.OnMovieItemClickListener {
 
-    private static final String SELECTED_TAB_POSITION = "SELECTED_TAB_POSITION";
     private static final String DETAIL_FRAGMENT_TAG = "DETAIL_FRAGMENT_TAG";
+    private static final String MAIN_FRAGMENT_TAG = "MAIN_FRAGMENT_TAG";
     private static final int DETAIL_RESULT_REQUEST_CODE = 1001;
 
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+
     private Uri selectedMovieUri;
-
-    @BindView(R.id.viewpager_filter_tabs) ViewPager viewPager;
-    @BindView(R.id.tabs_movies_filter) TabLayout tabLayout;
-
-    @Override
-    protected int getLayoutResourceId() {
-        return R.layout.activity_main;
-    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-        FilterFragmentPageAdapter pageAdapter = new FilterFragmentPageAdapter(getSupportFragmentManager(), MainActivity.this);
-        viewPager.setAdapter(pageAdapter);
-        tabLayout.setupWithViewPager(viewPager);
-        for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            TabLayout.Tab tab = tabLayout.getTabAt(i);
-            if (tab != null) {
-                tab.setIcon(pageAdapter.getIcon(i));
-            }
+        Bundle args = new Bundle();
+        args.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
+
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
         }
+
+        loadMainFragment();
 
         // Running in split master-detail mode (Landscape tablet)
         if (getResources().getBoolean(R.bool.has_two_panes)) {
-            if (selectedMovieUri!= null) {
+            if (selectedMovieUri != null) {
                 loadDetailFragment(selectedMovieUri);
             }
         } else {
@@ -66,16 +64,12 @@ public class MainActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
-        outState.putInt(SELECTED_TAB_POSITION, tabLayout.getSelectedTabPosition());
-
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        viewPager.setCurrentItem(savedInstanceState.getInt(SELECTED_TAB_POSITION, 0));
-
         selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
     }
 
@@ -112,15 +106,55 @@ public class MainActivity
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
-            return true;
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        String filterPref = Utility.getMoviesFilter(this, R.string.pref_filter_popular);
+        int menuId = 0;
+        if (filterPref.equals(getString(R.string.pref_filter_popular))) {
+            menuId = R.id.pref_filter_popularity;
+        } else if (filterPref.equals(getString(R.string.pref_filter_top_rated))) {
+            menuId = R.id.pref_filter_top_rated;
+        } else if (filterPref.equals(getString(R.string.pref_filter_favorite))) {
+            menuId = R.id.pref_filter_favorite;
+        }
+        MenuItem item = menu.findItem(menuId);
+        if (item != null) {
+            item.setChecked(true);
         }
 
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        boolean ignoreSelection = false;
+        String filter = getString(R.string.pref_filter_popular);
+        switch (id) {
+            case R.id.pref_filter_favorite:
+                filter = getString(R.string.pref_filter_favorite);
+                break;
+            case R.id.pref_filter_top_rated:
+                filter = getString(R.string.pref_filter_top_rated);
+                break;
+            case R.id.pref_filter_popularity:
+                filter = getString(R.string.pref_filter_popular);
+                break;
+            default:
+                ignoreSelection = true;
+        }
+        if (!ignoreSelection) {
+            Utility.setMoviesFilter(this, filter);
+            loadMainFragment();
+            item.setChecked(true);
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void loadMainFragment() {
+        MainFragment mainFragment = new MainFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_main_container, mainFragment, MAIN_FRAGMENT_TAG)
+                .commit();
     }
 
     private void loadDetailFragment(Uri movieUri) {

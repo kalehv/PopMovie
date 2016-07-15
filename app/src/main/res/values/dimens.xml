@@ -4,9 +4,13 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="sides_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+
     <dimen name="gridview_main_horizontal_spacing">5dp</dimen>
     <dimen name="gridview_main_vertical_spacing">5dp</dimen>
     <dimen name="gridview_column_width">120dp</dimen>
+    <dimen name="gridview_vertical_spacing">2dp</dimen>
+    <dimen name="gridview_horizontal_spacing">2dp</dimen>
+
     <dimen name="appbar_elevation">0dp</dimen>
     <dimen name="app_bar_height">240dp</dimen>
     <dimen name="text_margin">16dp</dimen>
@@ -19,17 +23,6 @@
     <dimen name="margin_detail_side">128dp</dimen>
     <dimen name="half_margin">8dp</dimen>
 
-    <!--Bottom Navigation-->
-    <dimen name="bottom_nav_elevation">8dp</dimen>
-    <dimen name="bottom_nav_height">56dp</dimen>
-    <dimen name="bottom_nav_tab_max_width">168dp</dimen>
-    <dimen name="bottom_nav_tab_min_width">80dp</dimen>
-    <dimen name="bottom_nav_tab_padding_bottom">10dp</dimen>
-    <dimen name="bottom_nav_tab_padding_sides">12dp</dimen>
-    <dimen name="bottom_nav_tab_padding_top_inactive">8dp</dimen>
-    <dimen name="bottom_nav_tab_padding_top_active">6dp</dimen>
-    <dimen name="bottom_nav_tab_image_width">24dp</dimen>
-    <dimen name="bottom_nav_tab_image_height">24dp</dimen>
-    <dimen name="bottom_nav_tab_text_size_inactive">12sp</dimen>
-    <dimen name="bottom_nav_tab_text_size_active">14sp</dimen>
+    <!--Tablet Layout Detals-->
+    <dimen name="movie_title_text_size">32sp</dimen>
 </resources>

@@ -15,7 +15,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -48,15 +47,30 @@ public class DetailFragment
 
     private static final int MOVIE_LOADER = 0;
 
-    @BindView(R.id.imageview_movie_detail_poster) ImageView imageViewMovieDetailPoster;
-    @BindView(R.id.textview_movie_overview) TextView textViewOverview;
-    @BindView(R.id.textview_movie_title) TextView textViewMovieTitle;
-    @BindView(R.id.textview_movie_release_adult) TextView textViewMovieReleaseAdult;
-    @BindView(R.id.ratingbar_movie_rating) RatingBar ratingBarMovieRating;
-    @BindView(R.id.recyclerview_movie_review) RecyclerView recyclerViewMovieReviews;
+//    @BindView(R.id.header)
+//    ImageView imageViewHeader;
+
+    @BindView(R.id.imageview_movie_detail_poster)
+    ImageView imageViewMovieDetailPoster;
+
+    @BindView(R.id.textview_movie_overview)
+    TextView textViewOverview;
+
+    @BindView(R.id.textview_movie_title)
+    TextView textViewMovieTitle;
+
+    @BindView(R.id.textview_movie_release_adult)
+    TextView textViewMovieReleaseAdult;
+
+    @BindView(R.id.ratingbar_movie_rating)
+    RatingBar ratingBarMovieRating;
+
+    @BindView(R.id.recyclerview_movie_review)
+    RecyclerView recyclerViewMovieReviews;
 
     private Bundle args;
     private Uri selectedMovieUri;
+    private int actionBarHeight;
     private TheMovieDBServiceManager movieDBServiceManager;
     private ArrayList<Review> reviews;
 
@@ -84,8 +98,8 @@ public class DetailFragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                Bundle savedInstanceState) {
-        View rootView =  inflater.inflate(R.layout.fragment_detail, container, false);
+                             Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         ButterKnife.bind(this, rootView);
 
         args = getArguments();
@@ -120,57 +134,50 @@ public class DetailFragment
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null && data.moveToFirst()) {
-            if (!getResources().getBoolean(R.bool.has_two_panes)) {
-                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                        (int) getResources().getDimension(R.dimen.width_poster_image),
-                        (int) getResources().getDimension(R.dimen.height_poster_image)
-                );
-                float standardMargin = getResources().getDimension(R.dimen.margin_standard);
-                float topMargin = getResources().getDimension(R.dimen.negative_poster_top_margin);
-                layoutParams.setMargins((int) standardMargin, (int) topMargin, (int) standardMargin, 0);
-                imageViewMovieDetailPoster.setLayoutParams(layoutParams);
-            }
-
-            String posterPath = data.getString(MovieContract.MovieEntry.COL_INDEX_POSTER_PATH);
-            Picasso.with(getActivity())
-                    .load(posterPath)
-                    .into(imageViewMovieDetailPoster);
-
-            textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
-            textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
-
-            String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
-            DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-            fromFormat.setLenient(false);
-            DateFormat toFormat = DateFormat.getDateInstance();
-            toFormat.setLenient(false);
-            try {
-                Date date = fromFormat.parse(releaseDate);
-                releaseDate = toFormat.format(date);
-            } catch (ParseException e) {
-                Log.e(TAG, "setupView: Date parse exception", e);
-            }
-
-            String releaseAdult = releaseDate;
-            if (data.getInt(MovieContract.MovieEntry.COL_INDEX_ADULT) == 1) {
-                releaseAdult += "   " + getResources().getString(R.string.indicator_adult_movie);
-            } else {
-                releaseAdult += "   " + getResources().getString(R.string.indicator_universal_movie);
-            }
-
-            ratingBarMovieRating.setRating((float) (data.getDouble(MovieContract.MovieEntry.COL_INDEX_VOTE_AVERAGE) / 2.0f));
-
-            textViewMovieReleaseAdult.setText(releaseAdult);
-
-            DataLoaderCallback listenerActivity = (DataLoaderCallback) getActivity();
-            if (listenerActivity != null) {
-                listenerActivity.OnDataLoaded(data);
-            }
+            setupView(data);
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+
+    private void setupView(final Cursor data) {
+//        String backdropPath = data.getString(MovieContract.MovieEntry.COL_INDEX_BACKDROP_PATH);
+//        Picasso.with(getActivity())
+//                .load(backdropPath)
+//                .into(imageViewHeader);
+
+        String posterPath = data.getString(MovieContract.MovieEntry.COL_INDEX_POSTER_PATH);
+        Picasso.with(getActivity())
+                .load(posterPath)
+                .into(imageViewMovieDetailPoster);
+
+        textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
+        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
+
+        String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
+        DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        fromFormat.setLenient(false);
+        DateFormat toFormat = DateFormat.getDateInstance();
+        toFormat.setLenient(false);
+        try {
+            Date date = fromFormat.parse(releaseDate);
+            releaseDate = toFormat.format(date);
+        } catch (ParseException e) {
+            Log.e(TAG, "setupView: Date parse exception", e);
+        }
+
+        String releaseAdult = releaseDate;
+        if (data.getInt(MovieContract.MovieEntry.COL_INDEX_ADULT) == 1) {
+            releaseAdult += "   " + getResources().getString(R.string.indicator_adult_movie);
+        } else {
+            releaseAdult += "   " + getResources().getString(R.string.indicator_universal_movie);
+        }
+
+        ratingBarMovieRating.setRating((float) (data.getDouble(MovieContract.MovieEntry.COL_INDEX_VOTE_AVERAGE) / 2.0f));
+
+        textViewMovieReleaseAdult.setText(releaseAdult);
     }
 }

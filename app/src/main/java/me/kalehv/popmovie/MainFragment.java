@@ -20,7 +20,7 @@ import me.kalehv.popmovie.adapters.ThumbnailsAdapter;
 import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.global.MoviesFilter;
+import me.kalehv.popmovie.utils.Utility;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -32,8 +32,7 @@ public class MainFragment
 
     @BindView(R.id.gridview_thumbnails) GridView gridView;
 
-    private static final String FILTER_BY = "filter";
-    private int filterBy;
+    private String filterBy;
 
     private ThumbnailsAdapter thumbnailsAdapter;
 
@@ -41,14 +40,6 @@ public class MainFragment
 
     public interface OnMovieItemClickListener {
         void onMovieItemClick(Uri uri);
-    }
-
-    public static MainFragment newInstance(int filter) {
-        Bundle args = new Bundle();
-        args.putInt(FILTER_BY, filter);
-        MainFragment mainFragment = new MainFragment();
-        mainFragment.setArguments(args);
-        return mainFragment;
     }
 
     @Override
@@ -65,10 +56,7 @@ public class MainFragment
         ButterKnife.bind(this, rootView);
         gridView.setOnItemClickListener(this);
 
-        Bundle args = getArguments();
-        if (args != null) {
-            filterBy = args.getInt(FILTER_BY, MoviesFilter.UNKNOWN);
-        }
+        filterBy = Utility.getMoviesFilter(getActivity(), R.string.pref_filter_popular);
 
         gridView.setAdapter(thumbnailsAdapter);
         gridView.setOnItemClickListener(this);
@@ -103,19 +91,15 @@ public class MainFragment
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String sortOrder = null;
         String selection;
-        switch (filterBy) {
-            case MoviesFilter.TOP_RATED:
-                selection = MovieProvider.topRatedMoviesSelection;
-                sortOrder = MovieProvider.topRatedMoviesSortOrder;
-                break;
-            case MoviesFilter.FAVORITE:
-                selection = MovieProvider.favoriteMoviesSelection;
-                break;
-            case MoviesFilter.POPULARITY:
-            default:
-                selection = MovieProvider.popularMoviesSelection;
-                sortOrder = MovieProvider.popularMoviesSortOrder;
-                break;
+
+        if (filterBy.equals(getString(R.string.pref_filter_top_rated))) {
+            selection = MovieProvider.topRatedMoviesSelection;
+            sortOrder = MovieProvider.topRatedMoviesSortOrder;
+        } else if (filterBy.equals(getString(R.string.pref_filter_favorite))) {
+            selection = MovieProvider.favoriteMoviesSelection;
+        } else {
+            selection = MovieProvider.popularMoviesSelection;
+            sortOrder = MovieProvider.popularMoviesSortOrder;
         }
 
         return new CursorLoader(

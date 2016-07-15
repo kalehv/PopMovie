@@ -67,8 +67,8 @@ public class TheMovieDBServiceManager {
     /*
         Reviews
      */
-    public void getReviewsData(int movieId, int pageNum, Callback<ReviewsData> callback) {
-        Call<ReviewsData> reviewsDataCall = moviesDBApi.getReviewsData(movieId, pageNum, API_KEY);
+    public void getReviewsData(int movieKey, int pageNum, Callback<ReviewsData> callback) {
+        Call<ReviewsData> reviewsDataCall = moviesDBApi.getReviewsData(movieKey, pageNum, API_KEY);
         reviewsDataCall.enqueue(callback);
     }
 }

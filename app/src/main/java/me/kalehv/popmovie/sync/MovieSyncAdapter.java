@@ -21,6 +21,10 @@ import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.Movie;
 import me.kalehv.popmovie.models.MoviesData;
+import me.kalehv.popmovie.models.Review;
+import me.kalehv.popmovie.models.ReviewsData;
+import me.kalehv.popmovie.models.Trailer;
+import me.kalehv.popmovie.models.TrailersData;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -58,7 +62,6 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void fetchMoviesData(final String filter, final int pageNumber) {
-
         TheMovieDBServiceManager movieDBServiceManager = TheMovieDBServiceManager.getInstance();
         movieDBServiceManager.getMoviesData(filter, pageNumber, new Callback<MoviesData>() {
             @Override
@@ -74,9 +77,112 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
 
             @Override
             public void onFailure(Call<MoviesData> call, Throwable t) {
-                Log.d(TAG, "onResponse: Got error");
+                Log.d(TAG, "onResponse: Got error fetching movies");
             }
         });
+    }
+
+    private void fetchReviewsData(final int movieId, int pageNumber) {
+        TheMovieDBServiceManager movieDBServiceManager = TheMovieDBServiceManager.getInstance();
+        movieDBServiceManager.getReviewsData(movieId, pageNumber, new Callback<ReviewsData>() {
+            @Override
+            public void onResponse(Call<ReviewsData> call, Response<ReviewsData> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: Got the response");
+                    ReviewsData reviewsData = response.body();
+                    if (reviewsData != null && reviewsData.getMovieId() == movieId) {
+                        saveReviews(reviewsData, movieId);
+                    } else {
+                        Log.d(TAG, "onResponse: Reviews data mismatch");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ReviewsData> call, Throwable t) {
+                Log.d(TAG, "onFailure: Got error fetching reviews");
+            }
+        });
+    }
+
+    private void fetchTrailersData(final int movieId) {
+        TheMovieDBServiceManager movieDBServiceManager = TheMovieDBServiceManager.getInstance();
+        movieDBServiceManager.getTrailersData(movieId, new Callback<TrailersData>() {
+            @Override
+            public void onResponse(Call<TrailersData> call, Response<TrailersData> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: Got the response");
+                    TrailersData trailersData = response.body();
+                    if (trailersData != null && trailersData.getMovieId() == movieId) {
+                        saveTrailers(trailersData, movieId);
+                    } else {
+                        Log.d(TAG, "onResponse: Trailers data mismatch");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TrailersData> call, Throwable t) {
+                Log.d(TAG, "onFailure: Got error fetching trailers");
+            }
+        });
+    }
+
+    private void saveReviews(ReviewsData reviewsData, int movieId) {
+        List<Review> reviewList = reviewsData.getReviews();
+        if (reviewList != null) {
+            Vector<ContentValues> contentValuesVector = new Vector<>(reviewList.size());
+
+            for (int i = 0; i < reviewList.size(); i++) {
+                Review review = reviewList.get(i);
+
+                ContentValues reviewValues = new ContentValues();
+
+                reviewValues.put(MovieContract.ReviewEntry.COLUMN_MOVIE_KEY, movieId);
+                reviewValues.put(MovieContract.ReviewEntry.COLUMN_AUTHOR, review.getAuthor());
+                reviewValues.put(MovieContract.ReviewEntry.COLUMN_CONTENT, review.getContent());
+
+                contentValuesVector.add(reviewValues);
+            }
+
+            if (contentValuesVector.size() > 0) {
+                ContentValues[] contentValues = new ContentValues[contentValuesVector.size()];
+                contentValuesVector.toArray(contentValues);
+                getContext().getContentResolver().bulkInsert(MovieContract.ReviewEntry.CONTENT_URI, contentValues);
+            }
+
+            if (onSyncListener != null) {
+                onSyncListener.onSyncComplete();
+            }
+        }
+    }
+
+    private void saveTrailers(TrailersData trailersData, int movieId) {
+        List<Trailer> trailerList = trailersData.getTrailers();
+        if (trailerList != null) {
+            Vector<ContentValues> contentValuesVector = new Vector<>(trailerList.size());
+
+            for (int i = 0; i < trailerList.size(); i++) {
+                Trailer trailer = trailerList.get(i);
+
+                ContentValues trailerValues = new ContentValues();
+
+                trailerValues.put(MovieContract.TrailerEntry.COLUMN_MOVIE_KEY, movieId);
+                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_URL, C.YOUTUBE_VIDEO_URL + trailer.getKey());
+
+                contentValuesVector.add(trailerValues);
+            }
+
+            if (contentValuesVector.size() > 0) {
+                ContentValues[] contentValues = new ContentValues[contentValuesVector.size()];
+                contentValuesVector.toArray(contentValues);
+                getContext().getContentResolver().bulkInsert(MovieContract.ReviewEntry.CONTENT_URI, contentValues);
+            }
+
+            if (onSyncListener != null) {
+                onSyncListener.onSyncComplete();
+            }
+        }
     }
 
     private void saveMovies(MoviesData moviesData, String filter, int pageNumber) {
@@ -144,11 +250,19 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
         fetchMoviesData(getContext().getString(R.string.pref_filter_popular), 2);
     }
 
-    public static void syncImmediately(Context context) {
+    public static void addListener(Context context) {
         if (context instanceof OnSyncListener) {
             MovieSyncAdapter.onSyncListener = (OnSyncListener) context;
         }
+    }
 
+    public static void removeListener(Context context) {
+        if (context instanceof OnSyncListener) {
+            MovieSyncAdapter.onSyncListener = null;
+        }
+    }
+
+    public static void syncImmediately(Context context) {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);

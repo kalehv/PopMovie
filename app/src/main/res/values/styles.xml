@@ -33,21 +33,4 @@
         <item name="android:windowBackground">@drawable/launch_screen</item>
     </style>
 
-    <!--Bottom Navigation Tab-->
-    <style name="AppTheme.BottomNavigation" parent="Widget.Design.TabLayout">
-        <item name="tabBackground">@color/colorPrimary</item>
-        <item name="tabMaxWidth">@dimen/bottom_nav_tab_max_width</item>
-        <item name="tabIndicatorColor">@android:color/transparent</item>
-        <item name="tabIndicatorHeight">0dp</item>
-        <item name="tabPaddingStart">@dimen/bottom_nav_tab_padding_sides</item>
-        <item name="tabPaddingEnd">@dimen/bottom_nav_tab_padding_sides</item>
-        <item name="tabTextAppearance">@style/AppTheme.BottomNavigation.Text</item>
-        <item name="tabSelectedTextColor">@color/colorTextPrimary</item>
-    </style>
-    <style name="AppTheme.BottomNavigation.Text" parent="TextAppearance.Design.Tab">
-        <item name="textAllCaps">false</item>
-        <item name="android:textColor">@color/colorTextSecondary</item>
-        <item name="android:textSize">@dimen/bottom_nav_tab_text_size_inactive</item>
-    </style>
-
 </resources>

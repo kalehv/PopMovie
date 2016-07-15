@@ -8,43 +8,80 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RatingBar;
+import android.widget.TextView;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.squareup.picasso.Picasso;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class DetailActivity
-        extends ToolbarAppCompatActivity
-        implements DetailFragment.DataLoaderCallback {
+        extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final String TAG = DetailActivity.class.getSimpleName();
 
-    @BindView(R.id.app_bar_detail) AppBarLayout appBarDetailLayout;
-    @BindView(R.id.header) ImageView imageViewHeader;
-    @BindView(R.id.header_button_trailer) ImageButton imageButtonHeader;
-    @BindView(R.id.collapsing_toolbar_layout) CollapsingToolbarLayout collapsingToolbarLayout;
-    @BindView(R.id.toolbar) Toolbar toolbar;
-    @BindView(R.id.nested_scrollview) NestedScrollView nestedScrollView;
-    @BindView(R.id.fragment_detail_container) FrameLayout detailFragmentContainer;
+    private static final int MOVIES_LOADER = 0;
+
+    @BindView(R.id.app_bar)
+    AppBarLayout appBarLayout;
+
+    @BindView(R.id.collapsing_toolbar_layout)
+    CollapsingToolbarLayout collapsingToolbarLayout;
+
+    @BindView(R.id.header)
+    ImageView imageViewHeader;
+
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+
+    @BindView(R.id.nested_scrollview)
+    NestedScrollView nestedScrollView;
+
+    @BindView(R.id.cardview_movie_details)
+    FrameLayout cardViewMovieDetails;
+
+    @BindView(R.id.imageview_movie_detail_poster)
+    ImageView imageViewMovieDetailPoster;
+
+    @BindView(R.id.textview_movie_overview)
+    TextView textViewOverview;
+
+    @BindView(R.id.textview_movie_title)
+    TextView textViewMovieTitle;
+
+    @BindView(R.id.textview_movie_release_adult)
+    TextView textViewMovieReleaseAdult;
+
+    @BindView(R.id.ratingbar_movie_rating)
+    RatingBar ratingBarMovieRating;
+
+    @BindView(R.id.recyclerview_movie_review)
+    RecyclerView recyclerViewMovieReviews;
 
     private int actionBarHeight;
     private Intent incomingIntent;
@@ -56,13 +93,10 @@ public class DetailActivity
     }
 
     @Override
-    protected int getLayoutResourceId() {
-        return R.layout.activity_detail;
-    }
-
-    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_detail);
+        ButterKnife.bind(this);
 
         if (getResources().getBoolean(R.bool.has_two_panes)) {
             if (savedInstanceState != null) {
@@ -74,22 +108,12 @@ public class DetailActivity
             return;
         }
 
-        ButterKnife.bind(this);
-
         incomingIntent = getIntent();
         if (incomingIntent.getExtras() != null) {
             selectedMovieUri = incomingIntent.getParcelableExtra(C.MOVIE_PARCEL);
-
-            Bundle args = new Bundle();
-            args.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
-
-            DetailFragment detailFragment = new DetailFragment();
-            detailFragment.setArguments(args);
-
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_detail_container, detailFragment)
-                    .commit();
         }
+
+        getSupportLoaderManager().initLoader(MOVIES_LOADER, null, this);
     }
 
     @Override
@@ -106,6 +130,39 @@ public class DetailActivity
         selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (selectedMovieUri != null) {
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    this,
+                    selectedMovieUri,
+                    C.SELECT_ALL_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data != null && data.moveToFirst()) {
+            setupView(data);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {}
+
+    private void setResultData() {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(C.MOVIE_PARCEL, selectedMovieUri);
+        setResult(RESULT_OK, resultIntent);
+    }
+
     private void setupHeaderView(Cursor data) {
         if (data != null && data.moveToFirst()) {
             String backdropPath = data.getString(MovieContract.MovieEntry.COL_INDEX_BACKDROP_PATH);
@@ -115,19 +172,14 @@ public class DetailActivity
         }
     }
 
-    private void setResultData() {
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(C.MOVIE_PARCEL, selectedMovieUri);
-        setResult(RESULT_OK, resultIntent);
-    }
-
     private void setupActionBar(final Cursor data) {
         setSupportActionBar(toolbar);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle(""); // Do not display any title by default
+            actionBar.setTitle(null); // Do not display any title by default
+            actionBar.setDisplayShowTitleEnabled(false);
         }
         TypedValue tv = new TypedValue();
         if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
@@ -138,10 +190,10 @@ public class DetailActivity
         // Ref - http://stackoverflow.com/a/31362835/906577
         float heightDp = getResources().getDisplayMetrics().heightPixels;
         float widthDp = getResources().getDisplayMetrics().widthPixels;
-        CoordinatorLayout.LayoutParams appBarLayoutParams = (CoordinatorLayout.LayoutParams) appBarDetailLayout.getLayoutParams();
+        CoordinatorLayout.LayoutParams appBarLayoutParams = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
         appBarLayoutParams.height = (int) ((widthDp * 2) / 3);
 
-        appBarDetailLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
             boolean isShow = false;
             int scrollRange = -1;
 
@@ -163,10 +215,10 @@ public class DetailActivity
 
         // Landscape
         if (widthDp >= heightDp) {
-            FrameLayout.LayoutParams movieDetailsFragmentLayoutParams = (FrameLayout.LayoutParams) detailFragmentContainer.getLayoutParams();
+            FrameLayout.LayoutParams cardViewLayoutParams = (FrameLayout.LayoutParams) cardViewMovieDetails.getLayoutParams();
             int topMargin = (int) (heightDp / 3);
-            movieDetailsFragmentLayoutParams.width = (int) (widthDp - getResources().getDimension(R.dimen.margin_detail_side));
-            movieDetailsFragmentLayoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+            cardViewLayoutParams.width = (int) (widthDp - getResources().getDimension(R.dimen.margin_detail_side));
+            cardViewLayoutParams.gravity = Gravity.CENTER_HORIZONTAL;
 
             CoordinatorLayout.LayoutParams appBarLayoutNestedScrollViewParams =
                     (CoordinatorLayout.LayoutParams) nestedScrollView.getLayoutParams();
@@ -176,65 +228,50 @@ public class DetailActivity
         }
     }
 
-    private void fetchVideoKey(Cursor data) {
-        if (movieDBServiceManager != null && data != null) {
-            int movieId = data.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
-            if (movieId != -1) {
-                movieDBServiceManager.getMoviesVideos(movieId, new Callback<JsonObject>() {
-                    @Override
-                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                        onReceiveVideoSuccessfulResponse(response);
-                    }
-
-                    @Override
-                    public void onFailure(Call<JsonObject> call, Throwable t) {
-                        Log.i(TAG, "onFailure: Error fetching trailer video link");
-                    }
-                });
-            }
+    private void setupView(Cursor data) {
+        if (!getResources().getBoolean(R.bool.has_two_panes)) {
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    (int) getResources().getDimension(R.dimen.width_poster_image),
+                    (int) getResources().getDimension(R.dimen.height_poster_image)
+            );
+            float standardMargin = getResources().getDimension(R.dimen.margin_standard);
+            float topMargin = getResources().getDimension(R.dimen.negative_poster_top_margin);
+            layoutParams.setMargins((int) standardMargin, (int) topMargin, (int) standardMargin, 0);
+            imageViewMovieDetailPoster.setLayoutParams(layoutParams);
         }
-    }
 
-    private void onReceiveVideoSuccessfulResponse(Response<JsonObject> response) {
-        JsonArray results = response.body().get("results").getAsJsonArray();
-        if (results != null) {
-            JsonObject first = results.get(0).getAsJsonObject();
-            if (first != null) {
-                final String videoKey = first.get(C.VIDEOS_YOUTUBE_KEY_NAME).getAsString();
-                assignTrailerUri(videoKey, imageButtonHeader);
-            }
+        String posterPath = data.getString(MovieContract.MovieEntry.COL_INDEX_POSTER_PATH);
+        Picasso.with(this)
+                .load(posterPath)
+                .into(imageViewMovieDetailPoster);
+
+        textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
+        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
+
+        String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
+        DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        fromFormat.setLenient(false);
+        DateFormat toFormat = DateFormat.getDateInstance();
+        toFormat.setLenient(false);
+        try {
+            Date date = fromFormat.parse(releaseDate);
+            releaseDate = toFormat.format(date);
+        } catch (ParseException e) {
+            Log.e(TAG, "setupView: Date parse exception", e);
         }
-    }
 
-    private void assignTrailerUri(final String videoKey, final View view) {
-        if (videoKey != null) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    view.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Uri uri = Uri.parse(C.YOUTUBE_BASE_URL)
-                                    .buildUpon()
-                                    .appendQueryParameter(C.YOUTUBE_QUERY_PARAM, videoKey)
-                                    .build();
-
-                            Intent youtubeIntent = new Intent(Intent.ACTION_VIEW, uri);
-                            youtubeIntent.putExtra(C.YOUTUBE_FORCE_FULLSCREEN, true);
-                            startActivity(youtubeIntent);
-                        }
-                    });
-                }
-            });
+        String releaseAdult = releaseDate;
+        if (data.getInt(MovieContract.MovieEntry.COL_INDEX_ADULT) == 1) {
+            releaseAdult += "   " + getResources().getString(R.string.indicator_adult_movie);
+        } else {
+            releaseAdult += "   " + getResources().getString(R.string.indicator_universal_movie);
         }
-    }
 
-    @Override
-    public void OnDataLoaded(Cursor data) {
-        if (data != null) {
-            setupHeaderView(data);
-            setupActionBar(data);
-            fetchVideoKey(data);
-        }
+        ratingBarMovieRating.setRating((float) (data.getDouble(MovieContract.MovieEntry.COL_INDEX_VOTE_AVERAGE) / 2.0f));
+
+        textViewMovieReleaseAdult.setText(releaseAdult);
+
+        setupHeaderView(data);
+        setupActionBar(data);
     }
 }
