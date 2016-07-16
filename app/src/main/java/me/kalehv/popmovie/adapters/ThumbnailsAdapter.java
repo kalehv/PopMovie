@@ -22,10 +22,16 @@ import me.kalehv.popmovie.data.MovieContract;
  * http://developer.android.com/training/improving-layouts/smooth-scrolling.html
  * http://javatechig.com/android/android-gridview-example-building-image-gallery-in-android
  */
-public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapter.ViewHolder> {
+public class ThumbnailsAdapter
+        extends CursorRecyclerViewAdapter<ThumbnailsAdapter.ViewHolder> {
     private final String TAG = ThumbnailsAdapter.class.getSimpleName();
 
     private Context context;
+    private OnItemClickListener onItemClickListener;
+
+    public interface OnItemClickListener {
+        void onItemClick(View view, Cursor cursor);
+    }
 
     public ThumbnailsAdapter(Context context, Cursor cursor) {
         super(context, cursor);
@@ -55,10 +61,16 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
         return viewHolder;
     }
 
-    static class ViewHolder
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.onItemClickListener = listener;
+    }
+
+    class ViewHolder
             extends RecyclerView.ViewHolder
             implements View.OnClickListener {
-        @BindView(R.id.imageview_movie_poster) ImageView image;
+
+        @BindView(R.id.imageview_movie_poster)
+        ImageView image;
 
         ViewHolder(View view) {
             super(view);
@@ -67,7 +79,9 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
 
         @Override
         public void onClick(View view) {
-            super.getPosition()
+            if (view instanceof ImageView && onItemClickListener != null) {
+                onItemClickListener.onItemClick(view, getCursor());
+            }
         }
     }
 }

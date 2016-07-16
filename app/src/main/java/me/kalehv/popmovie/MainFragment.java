@@ -8,13 +8,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -29,14 +27,13 @@ import me.kalehv.popmovie.utils.Utility;
  */
 public class MainFragment
         extends Fragment
-        implements RecyclerView.OnItemTouchListener,
+        implements ThumbnailsAdapter.OnItemClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     @BindView(R.id.recyclerview_movie_thumbnails)
     RecyclerView recyclerView;
-
+    GridLayoutManager gridLayoutManager;
     private String filterBy;
-
     private ThumbnailsAdapter thumbnailsAdapter;
 
     private static final int MOVIES_LOADER = 0;
@@ -53,18 +50,22 @@ public class MainFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), null);
-
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
 
-
         filterBy = Utility.getMoviesFilter(getActivity(), R.string.pref_filter_popular);
 
-        gridView.setAdapter(thumbnailsAdapter);
-        gridView.setOnItemClickListener(this);
-
         return rootView;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        gridLayoutManager = new GridLayoutManager(getActivity(), 3);
+        recyclerView.setLayoutManager(gridLayoutManager);
+        thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), null);
+        thumbnailsAdapter.setOnItemClickListener(this);
+        recyclerView.setAdapter(thumbnailsAdapter);
     }
 
     @Override
@@ -73,8 +74,7 @@ public class MainFragment
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-        Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
+    public void onItemClick(View view, Cursor cursor) {
         if (cursor != null) {
             OnMovieItemClickListener listenerActivity = (OnMovieItemClickListener) getActivity();
             if (listenerActivity != null) {
@@ -82,21 +82,6 @@ public class MainFragment
                 listenerActivity.onMovieItemClick(MovieContract.MovieEntry.buildMovieUri(movieKey));
             }
         }
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-        return false;
-    }
-
-    @Override
-    public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-
-    }
-
-    @Override
-    public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
     }
 
     @Override
