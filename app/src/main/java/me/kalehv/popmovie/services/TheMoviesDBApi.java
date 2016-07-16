@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 
 import me.kalehv.popmovie.models.MoviesData;
 import me.kalehv.popmovie.models.ReviewsData;
+import me.kalehv.popmovie.models.TrailersData;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -27,6 +28,13 @@ interface TheMoviesDBApi {
     // http://api.themoviedb.org/3/movie/244786/videos?api_key=<api_key>
     @GET("3/movie/{movieId}/videos")
     Call<JsonObject> getMovieVideoKey(@Path("movieId") int movieId, @Query("api_key") String apiKey);
+
+    /*
+        Trailers
+     */
+    // http://api.themoviedb.org/3/movie/244786/videos?api_key=<api_key>
+    @GET("3/movie/{movieId}/videos")
+    Call<TrailersData> getTrailersData(@Path("movieId") int movieId, @Query("api_key") String apiKey);
 
     /*
         Reviews

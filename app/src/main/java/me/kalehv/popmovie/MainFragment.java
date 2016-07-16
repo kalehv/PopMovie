@@ -1,106 +1,124 @@
 package me.kalehv.popmovie;
 
-import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.preference.PreferenceManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.adapters.ThumbnailsAdapter;
-import me.kalehv.popmovie.models.Movie;
-import me.kalehv.popmovie.models.MoviesData;
-import me.kalehv.popmovie.services.TheMovieDBServiceManager;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import me.kalehv.popmovie.data.MovieContract;
+import me.kalehv.popmovie.data.MovieProvider;
+import me.kalehv.popmovie.global.C;
+import me.kalehv.popmovie.utils.Utility;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainFragment
         extends Fragment
-        implements GridView.OnItemClickListener {
+        implements GridView.OnItemClickListener,
+        LoaderManager.LoaderCallbacks<Cursor> {
+
     @BindView(R.id.gridview_thumbnails) GridView gridView;
 
-    private ArrayList<Movie> movies;
+    private String filterBy;
 
-    private TheMovieDBServiceManager movieDBServiceManager;
-    private String filteredBy;
+    private ThumbnailsAdapter thumbnailsAdapter;
+
+    private static final int MOVIES_LOADER = 0;
 
     public interface OnMovieItemClickListener {
-        void onMovieItemClick(Movie movie);
-    }
-
-    public MainFragment() {
-        movieDBServiceManager = TheMovieDBServiceManager.getInstance();
+        void onMovieItemClick(Uri uri);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        fetchMoviesData();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), null, 0);
+
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
         gridView.setOnItemClickListener(this);
 
-        fetchMoviesData();
+        filterBy = Utility.getMoviesFilter(getActivity(), R.string.pref_filter_popular);
+
+        gridView.setAdapter(thumbnailsAdapter);
+        gridView.setOnItemClickListener(this);
 
         return rootView;
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Movie movie = (Movie) adapterView.getItemAtPosition(i);
-        OnMovieItemClickListener listenerActivity = (OnMovieItemClickListener) getActivity();
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
 
-        if (movie != null && listenerActivity != null) {
-            listenerActivity.onMovieItemClick(movie);
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+        Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
+        if (cursor != null) {
+            OnMovieItemClickListener listenerActivity = (OnMovieItemClickListener) getActivity();
+            if (listenerActivity != null) {
+                long movieKey = cursor.getLong(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
+                listenerActivity.onMovieItemClick(MovieContract.MovieEntry.buildMovieUri(movieKey));
+            }
         }
     }
 
-    private void setAdapter() {
-        ThumbnailsAdapter thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), R.layout.item_grid_movies, movies);
-        this.gridView.setAdapter(thumbnailsAdapter);
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(MOVIES_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
     }
 
-    private void fetchMoviesData() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String filter = preferences.getString(
-                getString(R.string.pref_filter_key),
-                getString(R.string.pref_filter_top_rated)
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String sortOrder = null;
+        String selection;
+
+        if (filterBy.equals(getString(R.string.pref_filter_top_rated))) {
+            selection = MovieProvider.topRatedMoviesSelection;
+            sortOrder = MovieProvider.topRatedMoviesSortOrder;
+        } else if (filterBy.equals(getString(R.string.pref_filter_favorite))) {
+            selection = MovieProvider.favoriteMoviesSelection;
+        } else {
+            selection = MovieProvider.popularMoviesSelection;
+            sortOrder = MovieProvider.popularMoviesSortOrder;
+        }
+
+        return new CursorLoader(
+                getActivity(),
+                MovieContract.MovieEntry.CONTENT_URI,
+                C.SELECT_ALL_COLUMNS,
+                selection,
+                null,
+                sortOrder
         );
+    }
 
-        // Only update data if previous filter is not the same as one in Shared Preferences
-        if (filteredBy == null || !filteredBy.equals(filter)) {
-            // Update filter and fetch data
-            this.movies = new ArrayList<>();
-            filteredBy = filter;
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        thumbnailsAdapter.swapCursor(data);
+    }
 
-            movieDBServiceManager.getMoviesData(filter, 1, new Callback<MoviesData>() {
-                @Override
-                public void onResponse(Call<MoviesData> moviesDataCall, Response<MoviesData> response) {
-                    if (response.isSuccessful()) {
-                        movies.addAll(response.body().getMovies());
-                        setAdapter();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<MoviesData> moviesDataCall, Throwable t) {}
-            });
-        }
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        thumbnailsAdapter.swapCursor(null);
     }
 }

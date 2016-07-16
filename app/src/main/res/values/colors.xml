@@ -304,9 +304,21 @@ http://www.google.com/design/spec/style/color.html#color-ui-color-palette -->
     <color name="white_half_transparent">#80FFFFFF</color>
 
     <!--App Colors-->
-    <color name="colorPrimary">@color/red_500</color>
-    <color name="colorPrimaryDark">@color/red_700</color>
+    <color name="colorPrimary">@color/teal_500</color>
+    <color name="colorPrimaryDark">@color/teal_700</color>
     <color name="colorAccent">#40C4FF</color>
+    
+    <!--Text Colors Dark Theme-->
+    <color name="colorTextPrimary">#DEFFFFFF</color>
+    <color name="colorTextSecondary">#8AFFFFFF</color>
+    <color name="colorTextDisabled">#61FFFFFF</color>
+    <color name="colorTextHint">#61FFFFFF</color>
+    
+    <!--Text Colors Light Theme-->
+    <color name="colorTextPrimaryDark">#FF000000</color>
+    <color name="colorTextSecondaryDark">#B3000000</color>
+    <color name="colorTextDisabledDark">#80000000</color>
+    <color name="colorTextHintDark">#80000000</color>
 
     <color name="colorBackground">@color/grey_50</color>
 

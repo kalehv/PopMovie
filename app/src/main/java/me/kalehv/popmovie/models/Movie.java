@@ -30,7 +30,7 @@ public class Movie {
     private List<Integer> genreIds = new ArrayList<Integer>();
 
     @SerializedName("id")
-    private Integer id;
+    private Integer movieId;
 
     @SerializedName("original_title")
     private String originalTitle;
@@ -55,6 +55,12 @@ public class Movie {
 
     @SerializedName("vote_average")
     private Double voteAverage;
+
+    private Boolean isFavorite;
+
+    private Integer popularPageNumber;
+
+    private Integer ratingPageNumber;
 
     /**
      * @return The posterPath
@@ -127,17 +133,17 @@ public class Movie {
     }
 
     /**
-     * @return The id
+     * @return The movieId
      */
-    public Integer getId() {
-        return id;
+    public Integer getMovieId() {
+        return movieId;
     }
 
     /**
-     * @param id The id
+     * @param movieId The movieId
      */
-    public void setId(Integer id) {
-        this.id = id;
+    public void setMovieId(Integer movieId) {
+        this.movieId = movieId;
     }
 
     /**
@@ -250,5 +256,47 @@ public class Movie {
      */
     public void setVoteAverage(Double voteAverage) {
         this.voteAverage = voteAverage;
+    }
+
+    /**
+     * @return The isFavorite
+     */
+    public Boolean getFavorite() {
+        return isFavorite;
+    }
+
+    /**
+     * @param favorite The isFavorite
+     */
+    public void setFavorite(Boolean favorite) {
+        isFavorite = favorite;
+    }
+
+    /**
+     * @return The popularPageNumber
+     */
+    public Integer getPopularPageNumber() {
+        return popularPageNumber;
+    }
+
+    /**
+     * @param popularPageNumber The popularPageNumber
+     */
+    public void setPopularPageNumber(Integer popularPageNumber) {
+        this.popularPageNumber = popularPageNumber;
+    }
+
+    /**
+     * @return The ratingPageNumber
+     */
+    public Integer getRatingPageNumber() {
+        return ratingPageNumber;
+    }
+
+    /**
+     * @param ratingPageNumber The ratingPageNumber
+     */
+    public void setRatingPageNumber(Integer ratingPageNumber) {
+        this.ratingPageNumber = ratingPageNumber;
     }
 }

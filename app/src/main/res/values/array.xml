@@ -3,10 +3,12 @@
     <string-array name="pref_filter_options">
         <item>@string/pref_filter_top_rated_title</item>
         <item>@string/pref_filter_popular_title</item>
+        <item>@string/pref_filter_favorite_title</item>
     </string-array>
 
     <string-array name="pref_filter_vales">
         <item>@string/pref_filter_top_rated</item>
         <item>@string/pref_filter_popular</item>
+        <item>@string/pref_filter_favorite</item>
     </string-array>
 </resources>

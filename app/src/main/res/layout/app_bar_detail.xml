@@ -29,13 +29,6 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"/>
 
-            <ImageButton
-                android:id="@+id/header_button_trailer"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_centerInParent="true"
-                android:background="@drawable/ic_play_circle_outline_black"
-                android:backgroundTint="@color/white_half_transparent"/>
         </RelativeLayout>
 
 

@@ -1,25 +1,20 @@
 package me.kalehv.popmovie.adapters;
 
-import android.app.Activity;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
-import android.support.annotation.LayoutRes;
+import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import me.kalehv.popmovie.BuildConfig;
 import me.kalehv.popmovie.R;
-import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.models.Movie;
+import me.kalehv.popmovie.data.MovieContract;
 
 /**
  * Created by harshadkale on 4/9/16.
@@ -27,52 +22,41 @@ import me.kalehv.popmovie.models.Movie;
  * http://developer.android.com/training/improving-layouts/smooth-scrolling.html
  * http://javatechig.com/android/android-gridview-example-building-image-gallery-in-android
  */
-public class ThumbnailsAdapter extends ArrayAdapter {
+public class ThumbnailsAdapter extends CursorAdapter {
     private final String TAG = ThumbnailsAdapter.class.getSimpleName();
 
     private Context context;
-    private int layoutResourceId;
 
-    public ThumbnailsAdapter(Context context, @LayoutRes int layoutResourceId, ArrayList data) {
-        super(context, layoutResourceId, data);
+    public ThumbnailsAdapter(Context context, Cursor cursor, int flags) {
+        super(context, cursor, flags);
 
-        this.layoutResourceId = layoutResourceId;
         this.context = context;
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View row = convertView;
-        final ViewHolder holder;
+    public View newView(Context context, Cursor cursor, ViewGroup parent) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_grid_movies, parent, false);
 
-        if (row == null) {
-            LayoutInflater inflater = ((Activity) context).getLayoutInflater();
-            row = inflater.inflate(layoutResourceId, parent, false);
-            holder = new ViewHolder(row);
-            row.setTag(holder);
-        } else {
-            holder = (ViewHolder) row.getTag();
+        ViewHolder viewHolder = new ViewHolder(view);
+        view.setTag(viewHolder);
+
+        return view;
+    }
+
+    @Override
+    public void bindView(View view, Context context, Cursor cursor) {
+        ViewHolder viewHolder = (ViewHolder) view.getTag();
+
+        String posterPath = cursor.getString(MovieContract.MovieEntry.COL_INDEX_POSTER_PATH);
+        if (posterPath != null) {
+            Uri posterUri = Uri.parse(posterPath);
+
+            viewHolder.image.setAdjustViewBounds(true);
+
+            Picasso.with(this.context)
+                    .load(posterUri)
+                    .into(viewHolder.image);
         }
-
-        Movie movie = (Movie) getItem(position);
-
-        String posterPath = movie.getPosterPath();
-        if (posterPath.charAt(0) == '/') {
-            posterPath = posterPath.substring(1, posterPath.length());
-        }
-
-        Uri posterUri = Uri.parse(C.POSTER_IMAGE_BASE_URL).buildUpon()
-                .appendPath(posterPath)
-                .appendQueryParameter(C.API_KEY_QUERY_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
-                .build();
-
-        holder.image.setAdjustViewBounds(true);
-
-        Picasso.with(this.context)
-                .load(posterUri)
-                .into(holder.image);
-
-        return row;
     }
 
     static class ViewHolder {

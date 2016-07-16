@@ -1,40 +1,52 @@
 package me.kalehv.popmovie;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import org.parceler.Parcels;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.models.Movie;
+import me.kalehv.popmovie.utils.Utility;
 
 public class MainActivity
-        extends ToolbarAppCompatActivity
-        implements MainFragment.OnMovieItemClickListener    {
+        extends AppCompatActivity
+        implements MainFragment.OnMovieItemClickListener {
 
     private static final String DETAIL_FRAGMENT_TAG = "DETAIL_FRAGMENT_TAG";
+    private static final String MAIN_FRAGMENT_TAG = "MAIN_FRAGMENT_TAG";
     private static final int DETAIL_RESULT_REQUEST_CODE = 1001;
 
-    private Movie selectedMovie;
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
 
-    @Override
-    protected int getLayoutResourceId() {
-        return R.layout.activity_main;
-    }
+    private Uri selectedMovieUri;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
+        Bundle args = new Bundle();
+        args.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
+
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+        }
+
+        loadMainFragment();
 
         // Running in split master-detail mode (Landscape tablet)
         if (getResources().getBoolean(R.bool.has_two_panes)) {
-            if (selectedMovie != null) {
-                loadDetailFragment(Parcels.wrap(selectedMovie));
+            if (selectedMovieUri != null) {
+                loadDetailFragment(selectedMovieUri);
             }
         } else {
             ActionBar actionBar = getSupportActionBar();
@@ -51,44 +63,38 @@ public class MainActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        Parcelable movieParcel = Parcels.wrap(selectedMovie);
-        outState.putParcelable(C.MOVIE_PARCEL, movieParcel);
-
+        outState.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
-        Parcelable movieParcel = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
-        selectedMovie = Parcels.unwrap(movieParcel);
+        selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == DETAIL_RESULT_REQUEST_CODE) {
-            Parcelable movieParcel = data.getParcelableExtra(C.MOVIE_PARCEL);
-            if (movieParcel != null) {
-                selectedMovie = Parcels.unwrap(movieParcel);
+            selectedMovieUri = data.getParcelableExtra(C.MOVIE_PARCEL);
+            if (selectedMovieUri != null) {
                 if (getResources().getBoolean(R.bool.has_two_panes)) {
-                    loadDetailFragment(movieParcel);
+                    loadDetailFragment(selectedMovieUri);
                 }
             }
         }
     }
 
     @Override
-    public void onMovieItemClick(Movie movie) {
-        selectedMovie = movie;
-        Parcelable movieParcel = Parcels.wrap(movie);
+    public void onMovieItemClick(Uri uri) {
+        selectedMovieUri = uri;
 
-        if (movie != null && movieParcel != null) {
+        if (selectedMovieUri != null) {
             if (!getResources().getBoolean(R.bool.has_two_panes)) {
-                loadDetailActivity(movieParcel);
+                loadDetailActivity(selectedMovieUri);
             } else {
-                loadDetailFragment(movieParcel);
+                loadDetailFragment(selectedMovieUri);
             }
         }
     }
@@ -100,22 +106,62 @@ public class MainActivity
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
-            return true;
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        String filterPref = Utility.getMoviesFilter(this, R.string.pref_filter_popular);
+        int menuId = 0;
+        if (filterPref.equals(getString(R.string.pref_filter_popular))) {
+            menuId = R.id.pref_filter_popularity;
+        } else if (filterPref.equals(getString(R.string.pref_filter_top_rated))) {
+            menuId = R.id.pref_filter_top_rated;
+        } else if (filterPref.equals(getString(R.string.pref_filter_favorite))) {
+            menuId = R.id.pref_filter_favorite;
+        }
+        MenuItem item = menu.findItem(menuId);
+        if (item != null) {
+            item.setChecked(true);
         }
 
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        boolean ignoreSelection = false;
+        String filter = getString(R.string.pref_filter_popular);
+        switch (id) {
+            case R.id.pref_filter_favorite:
+                filter = getString(R.string.pref_filter_favorite);
+                break;
+            case R.id.pref_filter_top_rated:
+                filter = getString(R.string.pref_filter_top_rated);
+                break;
+            case R.id.pref_filter_popularity:
+                filter = getString(R.string.pref_filter_popular);
+                break;
+            default:
+                ignoreSelection = true;
+        }
+        if (!ignoreSelection) {
+            Utility.setMoviesFilter(this, filter);
+            loadMainFragment();
+            item.setChecked(true);
+        }
         return super.onOptionsItemSelected(item);
     }
 
-    private void loadDetailFragment(Parcelable movieParcel) {
+    private void loadMainFragment() {
+        MainFragment mainFragment = new MainFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_main_container, mainFragment, MAIN_FRAGMENT_TAG)
+                .commit();
+    }
+
+    private void loadDetailFragment(Uri movieUri) {
         // Add fragment only if there is any selected movie
-        if (movieParcel != null) {
+        if (movieUri != null) {
             Bundle args = new Bundle();
-            args.putParcelable(C.MOVIE_PARCEL, movieParcel);
+            args.putParcelable(C.MOVIE_PARCEL, movieUri);
 
             DetailFragment detailFragment = new DetailFragment();
             detailFragment.setArguments(args);
@@ -132,9 +178,9 @@ public class MainActivity
         }
     }
 
-    private void loadDetailActivity(Parcelable movieParcel) {
+    private void loadDetailActivity(Uri movieUri) {
         Intent detailIntent = new Intent(this, DetailActivity.class);
-        detailIntent.putExtra(C.MOVIE_PARCEL, movieParcel);
+        detailIntent.putExtra(C.MOVIE_PARCEL, movieUri);
 
         startActivityForResult(detailIntent, DETAIL_RESULT_REQUEST_CODE);
     }

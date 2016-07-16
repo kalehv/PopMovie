@@ -1,10 +1,30 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="me.kalehv.popmovie.MainActivity">
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context=".MainActivity">
+
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_filter"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:title="@string/action_filter"
+        android:icon="@drawable/ic_filter"
+        app:showAsAction="always">
+        <menu>
+            <group
+                android:id="@+id/filter_by_group"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/pref_filter_popularity"
+                    android:title="@string/pref_filter_popular_title" />
+
+                <item
+                    android:id="@+id/pref_filter_top_rated"
+                    android:title="@string/pref_filter_top_rated_title" />
+
+                <item
+                    android:id="@+id/pref_filter_favorite"
+                    android:title="@string/pref_filter_favorite_title" />
+            </group>
+        </menu>
+    </item>
 </menu>

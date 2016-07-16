@@ -6,6 +6,7 @@ import me.kalehv.popmovie.BuildConfig;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.MoviesData;
 import me.kalehv.popmovie.models.ReviewsData;
+import me.kalehv.popmovie.models.TrailersData;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Retrofit;
@@ -55,11 +56,19 @@ public class TheMovieDBServiceManager {
         videoKeyCall.enqueue(callback);
     }
 
+
+    /*
+        Trailers
+     */
+    public void getTrailersData(int movieId, Callback<TrailersData> callback) {
+        Call<TrailersData> trailersDataCall = moviesDBApi.getTrailersData(movieId, API_KEY);
+        trailersDataCall.enqueue(callback);
+    }
     /*
         Reviews
      */
-    public void getReviewsData(int movieId, int pageNum, Callback<ReviewsData> callback) {
-        Call<ReviewsData> reviewsDataCall = moviesDBApi.getReviewsData(movieId, pageNum, API_KEY);
+    public void getReviewsData(int movieKey, int pageNum, Callback<ReviewsData> callback) {
+        Call<ReviewsData> reviewsDataCall = moviesDBApi.getReviewsData(movieKey, pageNum, API_KEY);
         reviewsDataCall.enqueue(callback);
     }
 }

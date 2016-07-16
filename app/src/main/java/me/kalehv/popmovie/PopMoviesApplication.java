@@ -14,8 +14,10 @@ public class PopMoviesApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // Stetho Configuration
-        Stetho.initializeWithDefaults(this);
+        // Stetho Configuration. Stetho is conditionally included for Debug Builds only.
+        if (BuildConfig.DEBUG) {
+            Stetho.initializeWithDefaults(this);
+        }
 
         // Picasso Configuration
         Picasso.Builder builder = new Picasso.Builder(this);
