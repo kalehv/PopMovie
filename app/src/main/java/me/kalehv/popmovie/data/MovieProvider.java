@@ -338,7 +338,7 @@ public class MovieProvider extends ContentProvider {
                                 returnCount++;
                             }
                         } catch (SQLiteConstraintException constraintException) {
-                            updateExistingRow(db, value);
+                            updateExistingRowOnInsert(db, value);
                         }
                     }
                     db.setTransactionSuccessful();
@@ -400,7 +400,7 @@ public class MovieProvider extends ContentProvider {
         super.shutdown();
     }
 
-    private void updateExistingRow(SQLiteDatabase db, ContentValues value) {
+    private void updateExistingRowOnInsert(SQLiteDatabase db, ContentValues value) {
         int movieKey = (int) value.get(MovieContract.MovieEntry.COLUMN_MOVIE_KEY);
         Uri movieUri = MovieContract.MovieEntry.buildMovieUri(movieKey);
         Cursor cursor = getMovieByKey(movieUri);

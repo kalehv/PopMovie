@@ -30,7 +30,9 @@ public class MainFragment
         implements GridView.OnItemClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
+    //region ButterKnife Declarations
     @BindView(R.id.gridview_thumbnails) GridView gridView;
+    //endregion
 
     private String filterBy;
 

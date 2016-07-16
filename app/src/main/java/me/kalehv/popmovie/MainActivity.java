@@ -23,8 +23,10 @@ public class MainActivity
     private static final String MAIN_FRAGMENT_TAG = "MAIN_FRAGMENT_TAG";
     private static final int DETAIL_RESULT_REQUEST_CODE = 1001;
 
+    //region ButterKnife Declarations
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+    //endregion
 
     private Uri selectedMovieUri;
 

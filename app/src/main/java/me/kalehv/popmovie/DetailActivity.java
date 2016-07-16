@@ -1,5 +1,6 @@
 package me.kalehv.popmovie;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -8,6 +9,8 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -19,6 +22,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,6 +40,7 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.data.MovieContract;
+import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
 
@@ -47,6 +52,7 @@ public class DetailActivity
 
     private static final int MOVIES_LOADER = 0;
 
+    //region ButterKnife declarations
     @BindView(R.id.app_bar)
     AppBarLayout appBarLayout;
 
@@ -83,10 +89,23 @@ public class DetailActivity
     @BindView(R.id.recyclerview_movie_review)
     RecyclerView recyclerViewMovieReviews;
 
+    @BindView(R.id.fab_favorite_movie)
+    FloatingActionButton fabFavoriteMovie;
+    //endregion
+
     private int actionBarHeight;
     private Intent incomingIntent;
     private TheMovieDBServiceManager movieDBServiceManager;
     private Uri selectedMovieUri;
+    private boolean isFavorite;
+    private int movieKey;
+
+    private View.OnClickListener onFavoriteClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            toggleMovieFavorite();
+        }
+    };
 
     public DetailActivity() {
         movieDBServiceManager = TheMovieDBServiceManager.getInstance();
@@ -97,6 +116,8 @@ public class DetailActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         ButterKnife.bind(this);
+
+        fabFavoriteMovie.setOnClickListener(onFavoriteClickListener);
 
         if (getResources().getBoolean(R.bool.has_two_panes)) {
             if (savedInstanceState != null) {
@@ -151,6 +172,8 @@ public class DetailActivity
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null && data.moveToFirst()) {
             setupView(data);
+            isFavorite = data.getInt(MovieContract.MovieEntry.COL_INDEX_FAVORITE) != 0;
+            movieKey = data.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
         }
     }
 
@@ -246,7 +269,7 @@ public class DetailActivity
                 .into(imageViewMovieDetailPoster);
 
         textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
-        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
+        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
 
         String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
         DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -273,5 +296,25 @@ public class DetailActivity
 
         setupHeaderView(data);
         setupActionBar(data);
+    }
+
+    private void toggleMovieFavorite() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MovieContract.MovieEntry.COLUMN_FAVORITE, isFavorite ? 0 : 1);
+
+        Snackbar.make(
+                findViewById(android.R.id.content),
+                isFavorite ? R.string.snack_movie_unfavorited : R.string.snack_movie_favorited,
+                Snackbar.LENGTH_LONG
+        ).setAction(R.string.action_undo, onFavoriteClickListener).show();
+
+        getContentResolver().update(
+                MovieContract.MovieEntry.CONTENT_URI,
+                contentValues,
+                MovieProvider.movieByKeySelection,
+                new String[]{String.valueOf(movieKey)}
+        );
+
+        isFavorite = !isFavorite;
     }
 }

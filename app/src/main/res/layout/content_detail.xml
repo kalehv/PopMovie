@@ -25,6 +25,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
+            android:id="@+id/layout_movie_details"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipChildren="false"
@@ -77,6 +78,12 @@
                         android:layout_marginRight="@dimen/text_margin"
                         android:isIndicator="true"
                         android:numStars="5"/>
+
+                    <!--<Button-->
+                    <!--android:id="@+id/button_favorite"-->
+                    <!---->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"/>-->
 
                 </LinearLayout>
 

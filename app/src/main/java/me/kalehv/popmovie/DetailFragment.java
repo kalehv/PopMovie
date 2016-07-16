@@ -46,6 +46,7 @@ public class DetailFragment
 //    @BindView(R.id.header)
 //    ImageView imageViewHeader;
 
+    //region ButterKnife Declarations
     @BindView(R.id.imageview_movie_detail_poster)
     ImageView imageViewMovieDetailPoster;
 
@@ -66,6 +67,7 @@ public class DetailFragment
 
     private Bundle args;
     private Uri selectedMovieUri;
+    //endregion
 
 //    private void setAdapter() {
 //        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(getActivity(), reviews);
