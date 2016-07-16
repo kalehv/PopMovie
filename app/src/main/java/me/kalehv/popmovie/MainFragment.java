@@ -8,7 +8,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -27,10 +29,11 @@ import me.kalehv.popmovie.utils.Utility;
  */
 public class MainFragment
         extends Fragment
-        implements GridView.OnItemClickListener,
+        implements RecyclerView.OnItemTouchListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    @BindView(R.id.gridview_thumbnails) GridView gridView;
+    @BindView(R.id.recyclerview_movie_thumbnails)
+    RecyclerView recyclerView;
 
     private String filterBy;
 
@@ -50,11 +53,11 @@ public class MainFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), null, 0);
+        thumbnailsAdapter = new ThumbnailsAdapter(getActivity(), null);
 
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
-        gridView.setOnItemClickListener(this);
+
 
         filterBy = Utility.getMoviesFilter(getActivity(), R.string.pref_filter_popular);
 
@@ -79,6 +82,21 @@ public class MainFragment
                 listenerActivity.onMovieItemClick(MovieContract.MovieEntry.buildMovieUri(movieKey));
             }
         }
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+
+    }
+
+    @Override
+    public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
     }
 
     @Override

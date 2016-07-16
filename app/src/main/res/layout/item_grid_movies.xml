@@ -1,7 +1,8 @@
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+<ImageView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/imageview_movie_poster"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
-    android:scaleType="centerCrop"
-    android:contentDescription="@string/content_desc_movie_thumbnail" />
+    android:contentDescription="@string/content_desc_movie_thumbnail"
+    android:scaleType="centerCrop"/>
