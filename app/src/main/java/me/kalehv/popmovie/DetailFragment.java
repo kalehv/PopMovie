@@ -1,9 +1,12 @@
 package me.kalehv.popmovie;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -28,6 +31,7 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.data.MovieContract;
+import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.sync.MovieSyncAdapter;
 
@@ -64,10 +68,21 @@ public class DetailFragment
 
     @BindView(R.id.recyclerview_movie_review)
     RecyclerView recyclerViewMovieReviews;
+    //endregion
+
+    FloatingActionButton fabFavoriteMovie;
 
     private Bundle args;
     private Uri selectedMovieUri;
-    //endregion
+    private boolean isFavorite;
+    private int movieKey;
+
+    private View.OnClickListener onFavoriteClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            toggleMovieFavorite();
+        }
+    };
 
 //    private void setAdapter() {
 //        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(getActivity(), reviews);
@@ -93,6 +108,10 @@ public class DetailFragment
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         ButterKnife.bind(this, rootView);
+
+        fabFavoriteMovie = (FloatingActionButton) getActivity().findViewById(R.id.fab_favorite_movie);
+        fabFavoriteMovie.setOnClickListener(onFavoriteClickListener);
+        fabFavoriteMovie.setVisibility(View.VISIBLE);
 
         args = getArguments();
 
@@ -128,6 +147,8 @@ public class DetailFragment
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null && data.moveToFirst()) {
             setupView(data);
+            isFavorite = data.getInt(MovieContract.MovieEntry.COL_INDEX_FAVORITE) != 0;
+            movieKey = data.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
         }
     }
 
@@ -148,7 +169,7 @@ public class DetailFragment
                 .into(imageViewMovieDetailPoster);
 
         textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
-        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
+        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
 
         String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
         DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -172,5 +193,25 @@ public class DetailFragment
         ratingBarMovieRating.setRating((float) (data.getDouble(MovieContract.MovieEntry.COL_INDEX_VOTE_AVERAGE) / 2.0f));
 
         textViewMovieReleaseAdult.setText(releaseAdult);
+    }
+
+    private void toggleMovieFavorite() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MovieContract.MovieEntry.COLUMN_FAVORITE, isFavorite ? 0 : 1);
+
+        Snackbar.make(
+                getActivity().findViewById(android.R.id.content),
+                isFavorite ? R.string.snack_movie_unfavorited : R.string.snack_movie_favorited,
+                Snackbar.LENGTH_LONG
+        ).setAction(R.string.action_undo, onFavoriteClickListener).show();
+
+        getActivity().getContentResolver().update(
+                MovieContract.MovieEntry.CONTENT_URI,
+                contentValues,
+                MovieProvider.movieByKeySelection,
+                new String[]{String.valueOf(movieKey)}
+        );
+
+        isFavorite = !isFavorite;
     }
 }
