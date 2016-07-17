@@ -81,6 +81,12 @@
             android:layout_margin="@dimen/text_margin"/>
 
         <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerview_movie_trailer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"/>
+
+        <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerview_movie_review"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

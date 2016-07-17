@@ -57,7 +57,7 @@ public class DetailActivity
 
     private final String TAG = DetailActivity.class.getSimpleName();
 
-    private static final int MOVIES_LOADER = 0;
+    private static final int MOVIE_LOADER = 0;
     private static final int TRAILERS_LOADER = 1;
     private static final int REVIEWS_LOADER = 2;
 
@@ -142,20 +142,18 @@ public class DetailActivity
             selectedMovieUri = incomingIntent.getParcelableExtra(C.MOVIE_PARCEL);
         }
 
-        getSupportLoaderManager().initLoader(MOVIES_LOADER, null, this);
+        getSupportLoaderManager().initLoader(MOVIE_LOADER, null, this);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
-
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
         selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
     }
 
@@ -163,7 +161,7 @@ public class DetailActivity
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (selectedMovieUri != null) {
             switch (id) {
-                case MOVIES_LOADER:
+                case MOVIE_LOADER:
                     return new CursorLoader(
                             this,
                             selectedMovieUri,
@@ -199,7 +197,7 @@ public class DetailActivity
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
-            case MOVIES_LOADER:
+            case MOVIE_LOADER:
                 if (data != null && data.moveToFirst()) {
                     setupView(data);
                     isFavorite = data.getInt(MovieContract.MovieEntry.COL_INDEX_FAVORITE) != 0;
