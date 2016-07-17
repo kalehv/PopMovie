@@ -1,5 +1,6 @@
 package me.kalehv.popmovie;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -8,17 +9,21 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -30,23 +35,33 @@ import com.squareup.picasso.Picasso;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import me.kalehv.popmovie.adapters.ReviewsAdapter;
+import me.kalehv.popmovie.adapters.TrailersAdapter;
 import me.kalehv.popmovie.data.MovieContract;
+import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.services.TheMovieDBServiceManager;
+import me.kalehv.popmovie.models.Review;
+import me.kalehv.popmovie.models.Trailer;
+import me.kalehv.popmovie.sync.MovieSyncAdapter;
 
 public class DetailActivity
         extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<Cursor> {
+        implements LoaderManager.LoaderCallbacks<Cursor>,
+        MovieSyncAdapter.OnSyncListener {
 
     private final String TAG = DetailActivity.class.getSimpleName();
 
-    private static final int MOVIES_LOADER = 0;
+    private static final int MOVIE_LOADER = 0;
+    private static final int TRAILERS_LOADER = 1;
+    private static final int REVIEWS_LOADER = 2;
 
+    //region ButterKnife declarations
     @BindView(R.id.app_bar)
     AppBarLayout appBarLayout;
 
@@ -83,20 +98,34 @@ public class DetailActivity
     @BindView(R.id.recyclerview_movie_review)
     RecyclerView recyclerViewMovieReviews;
 
-    private int actionBarHeight;
-    private Intent incomingIntent;
-    private TheMovieDBServiceManager movieDBServiceManager;
-    private Uri selectedMovieUri;
+    @BindView(R.id.recyclerview_movie_trailer)
+    RecyclerView recyclerViewMovieTrailers;
 
-    public DetailActivity() {
-        movieDBServiceManager = TheMovieDBServiceManager.getInstance();
-    }
+    @BindView(R.id.fab_favorite_movie)
+    FloatingActionButton fabFavoriteMovie;
+    //endregion
+
+    private int actionBarHeight;
+    private Uri selectedMovieUri;
+    private boolean isFavorite;
+    private int movieKey;
+    private boolean areTrailersFetchedFromServer = false;
+    private boolean areReviewsFetchedFromServer = false;
+
+    private View.OnClickListener onFavoriteClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            toggleMovieFavorite();
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         ButterKnife.bind(this);
+
+        fabFavoriteMovie.setOnClickListener(onFavoriteClickListener);
 
         if (getResources().getBoolean(R.bool.has_two_panes)) {
             if (savedInstanceState != null) {
@@ -108,54 +137,99 @@ public class DetailActivity
             return;
         }
 
-        incomingIntent = getIntent();
+        Intent incomingIntent = getIntent();
         if (incomingIntent.getExtras() != null) {
             selectedMovieUri = incomingIntent.getParcelableExtra(C.MOVIE_PARCEL);
         }
 
-        getSupportLoaderManager().initLoader(MOVIES_LOADER, null, this);
+        getSupportLoaderManager().initLoader(MOVIE_LOADER, null, this);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(C.MOVIE_PARCEL, selectedMovieUri);
-
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
         selectedMovieUri = savedInstanceState.getParcelable(C.MOVIE_PARCEL);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (selectedMovieUri != null) {
-            // Now create and return a CursorLoader that will take care of
-            // creating a Cursor for the data being displayed.
-            return new CursorLoader(
-                    this,
-                    selectedMovieUri,
-                    C.SELECT_ALL_COLUMNS,
-                    null,
-                    null,
-                    null
-            );
+            switch (id) {
+                case MOVIE_LOADER:
+                    return new CursorLoader(
+                            this,
+                            selectedMovieUri,
+                            C.SELECT_ALL_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+                case TRAILERS_LOADER:
+                    return new CursorLoader(
+                            this,
+                            MovieContract.TrailerEntry.buildTrailerUriForMovie(movieKey),
+                            C.SELECT_ALL_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+                case REVIEWS_LOADER:
+                    return new CursorLoader(
+                            this,
+                            MovieContract.ReviewEntry.buildReviewUriForMovie(movieKey),
+                            C.SELECT_ALL_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+
+            }
         }
         return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data != null && data.moveToFirst()) {
-            setupView(data);
+        switch (loader.getId()) {
+            case MOVIE_LOADER:
+                if (data != null && data.moveToFirst()) {
+                    setupView(data);
+                    isFavorite = data.getInt(MovieContract.MovieEntry.COL_INDEX_FAVORITE) != 0;
+                    movieKey = data.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
+                    getSupportLoaderManager().initLoader(REVIEWS_LOADER, null, this);
+                    getSupportLoaderManager().initLoader(TRAILERS_LOADER, null, this);
+                }
+                break;
+            case TRAILERS_LOADER:
+                if (data != null && data.moveToFirst()) {
+                    setTrailersView(data);
+                } else if (!areTrailersFetchedFromServer) {
+                    MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
+                    movieSyncAdapter.syncTrailers(movieKey);
+                    movieSyncAdapter.setOnSyncListener(this);
+                }
+                break;
+            case REVIEWS_LOADER:
+                if (data != null && data.moveToFirst()) {
+                    setReviewsView(data);
+                } else if (!areReviewsFetchedFromServer) {
+                    MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
+                    movieSyncAdapter.syncReviews(movieKey);
+                    movieSyncAdapter.setOnSyncListener(this);
+                }
+                break;
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {}
+    public void onLoaderReset(Loader<Cursor> loader) {
+    }
 
     private void setResultData() {
         Intent resultIntent = new Intent();
@@ -273,5 +347,74 @@ public class DetailActivity
 
         setupHeaderView(data);
         setupActionBar(data);
+    }
+
+    private void toggleMovieFavorite() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MovieContract.MovieEntry.COLUMN_FAVORITE, isFavorite ? 0 : 1);
+
+        Snackbar.make(
+                findViewById(android.R.id.content),
+                isFavorite ? R.string.snack_movie_unfavorited : R.string.snack_movie_favorited,
+                Snackbar.LENGTH_LONG
+        ).setAction(R.string.action_undo, onFavoriteClickListener).show();
+
+        getContentResolver().update(
+                MovieContract.MovieEntry.CONTENT_URI,
+                contentValues,
+                MovieProvider.movieByKeySelection,
+                new String[]{String.valueOf(movieKey)}
+        );
+
+        isFavorite = !isFavorite;
+    }
+
+
+    private void setReviewsView(Cursor data) {
+        ArrayList<Review> reviewArrayList = new ArrayList<>();
+        for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
+            // The Cursor is now set to the right position
+            Review review = new Review();
+            review.setAuthor(data.getString(MovieContract.ReviewEntry.COL_INDEX_AUTHOR));
+            review.setContent(data.getString(MovieContract.ReviewEntry.COL_INDEX_CONTENT));
+            reviewArrayList.add(review);
+        }
+
+        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(this, reviewArrayList);
+        recyclerViewMovieReviews.setAdapter(reviewsAdapter);
+
+        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
+    }
+
+    private void setTrailersView(Cursor data) {
+        ArrayList<Trailer> trailerArrayList = new ArrayList<>();
+        for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
+            // The Cursor is now set to the right position
+            Trailer trailer = new Trailer();
+            trailer.setUrl(data.getString(MovieContract.TrailerEntry.COL_INDEX_TRAILER_URL));
+            trailer.setImageUrl(data.getString(MovieContract.TrailerEntry.COL_INDEX_TRAILER_IMAGE_URL));
+            trailerArrayList.add(trailer);
+        }
+
+        TrailersAdapter trailersAdapter = new TrailersAdapter(this, trailerArrayList);
+        recyclerViewMovieTrailers.setAdapter(trailersAdapter);
+
+        recyclerViewMovieTrailers.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        recyclerViewMovieTrailers.setNestedScrollingEnabled(false);
+    }
+
+    @Override
+    public void onSyncComplete(int syncDataType) {
+        switch (syncDataType) {
+            case MovieSyncAdapter.SYNC_TRAILERS_DATA:
+                getSupportLoaderManager().initLoader(TRAILERS_LOADER, null, this);
+                areTrailersFetchedFromServer = true;
+                break;
+            case MovieSyncAdapter.SYNC_REVIEWS_DATA:
+                getSupportLoaderManager().initLoader(REVIEWS_LOADER, null, this);
+                areReviewsFetchedFromServer = true;
+                break;
+        }
     }
 }

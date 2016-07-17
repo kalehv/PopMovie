@@ -84,18 +84,22 @@ public class MovieContract {
         // Foreign Key to Movie Table
         public static final String COLUMN_ID = "_ID";
         public static final String COLUMN_MOVIE_KEY = "movie_id";
+        public static final String COLUMN_TRAILER_KEY = "trailer_id";
         public static final String COLUMN_TRAILER_URL = "trailer_url";
+        public static final String COLUMN_TRAILER_IMAGE_URL = "trailer_image_url";
 
         public static final int COL_INDEX_ID = 0;
         public static final int COL_INDEX_MOVIE_KEY = 1;
-        public static final int COL_INDEX_TRAILER_URL = 2;
+        public static final int COL_INDEX_TRAILER_KEY = 2;
+        public static final int COL_INDEX_TRAILER_URL = 3;
+        public static final int COL_INDEX_TRAILER_IMAGE_URL = 4;
 
         public static Uri buildTrailerUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
-        public static Uri buildTrailerMovie(String movieId) {
-            return CONTENT_URI.buildUpon().appendPath(movieId).build();
+        public static Uri buildTrailerUriForMovie(int movieKey) {
+            return CONTENT_URI.buildUpon().appendPath(String.valueOf(movieKey)).build();
         }
 
         public static String getMovieFromUri(Uri uri) {
@@ -117,13 +121,15 @@ public class MovieContract {
         // Foreign Key to Movie Table
         public static final String COLUMN_ID = "_ID";
         public static final String COLUMN_MOVIE_KEY = "movie_id";
+        public static final String COLUMN_REVIEW_KEY = "review_id";
         public static final String COLUMN_AUTHOR = "author";
         public static final String COLUMN_CONTENT = "content";
 
         public static final int COL_INDEX_ID = 0;
         public static final int COL_INDEX_MOVIE_KEY = 1;
-        public static final int COL_INDEX_AUTHOR = 2;
-        public static final int COL_INDEX_CONTENT = 3;
+        public static final int COL_INDEX_REVIEW_KEY = 2;
+        public static final int COL_INDEX_AUTHOR = 3;
+        public static final int COL_INDEX_CONTENT = 4;
 
         /* Uri Builders */
         // Review for id
@@ -132,8 +138,8 @@ public class MovieContract {
         }
 
         // Review for Movie
-        public static Uri buildReviewMovie(String movieId) {
-            return CONTENT_URI.buildUpon().appendPath(movieId).build();
+        public static Uri buildReviewUriForMovie(int movieKey) {
+            return CONTENT_URI.buildUpon().appendPath(String.valueOf(movieKey)).build();
         }
 
         /* Getters */

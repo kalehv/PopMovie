@@ -53,15 +53,27 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
     private final String TAG = MovieSyncAdapter.class.getSimpleName();
 
     private static OnSyncListener onSyncListener;
+    private Context context;
 
     public static final int SYNC_INTERVAL = 60 * 1440; // Sync once in 24 hours
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
 
-    public MovieSyncAdapter(Context context, boolean autoInitialize) {
-        super(context, autoInitialize);
+
+    private static final String SYNC_DATA_TYPE = "SYNC_DATA_TYPE";
+    public static final int SYNC_MOVIES_DATA = 0; // Keep this default to 0
+    public static final int SYNC_TRAILERS_DATA = 1;
+    public static final int SYNC_REVIEWS_DATA = 2;
+
+    public interface OnSyncListener {
+        void onSyncComplete(int syncDataType);
     }
 
-    private void fetchMoviesData(final String filter, final int pageNumber) {
+    public MovieSyncAdapter(Context context, boolean autoInitialize) {
+        super(context, autoInitialize);
+        this.context = context;
+    }
+
+    public void fetchMoviesData(final String filter, final int pageNumber) {
         TheMovieDBServiceManager movieDBServiceManager = TheMovieDBServiceManager.getInstance();
         movieDBServiceManager.getMoviesData(filter, pageNumber, new Callback<MoviesData>() {
             @Override
@@ -82,7 +94,7 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
         });
     }
 
-    private void fetchReviewsData(final int movieId, int pageNumber) {
+    public void fetchReviewsData(final int movieId, int pageNumber) {
         TheMovieDBServiceManager movieDBServiceManager = TheMovieDBServiceManager.getInstance();
         movieDBServiceManager.getReviewsData(movieId, pageNumber, new Callback<ReviewsData>() {
             @Override
@@ -105,7 +117,7 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
         });
     }
 
-    private void fetchTrailersData(final int movieId) {
+    public void fetchTrailersData(final int movieId) {
         TheMovieDBServiceManager movieDBServiceManager = TheMovieDBServiceManager.getInstance();
         movieDBServiceManager.getTrailersData(movieId, new Callback<TrailersData>() {
             @Override
@@ -139,6 +151,7 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
                 ContentValues reviewValues = new ContentValues();
 
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_MOVIE_KEY, movieId);
+                reviewValues.put(MovieContract.ReviewEntry.COLUMN_REVIEW_KEY, review.getId());
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_AUTHOR, review.getAuthor());
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_CONTENT, review.getContent());
 
@@ -152,7 +165,7 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
             }
 
             if (onSyncListener != null) {
-                onSyncListener.onSyncComplete();
+                onSyncListener.onSyncComplete(SYNC_REVIEWS_DATA);
             }
         }
     }
@@ -164,11 +177,15 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
 
             for (int i = 0; i < trailerList.size(); i++) {
                 Trailer trailer = trailerList.get(i);
+                trailer.setUrl(C.YOUTUBE_VIDEO_URL + trailer.getKey());
+                trailer.setImageUrl(C.YOUTUBE_VIDEO_THUMBNAIL + trailer.getKey() + C.YOUTUBE_VIDEO_THUMBNAIL_FILE_NAME);
 
                 ContentValues trailerValues = new ContentValues();
 
                 trailerValues.put(MovieContract.TrailerEntry.COLUMN_MOVIE_KEY, movieId);
-                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_URL, C.YOUTUBE_VIDEO_URL + trailer.getKey());
+                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_KEY, trailer.getId());
+                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_URL, trailer.getUrl());
+                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_IMAGE_URL, trailer.getImageUrl());
 
                 contentValuesVector.add(trailerValues);
             }
@@ -176,11 +193,11 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
             if (contentValuesVector.size() > 0) {
                 ContentValues[] contentValues = new ContentValues[contentValuesVector.size()];
                 contentValuesVector.toArray(contentValues);
-                getContext().getContentResolver().bulkInsert(MovieContract.ReviewEntry.CONTENT_URI, contentValues);
+                getContext().getContentResolver().bulkInsert(MovieContract.TrailerEntry.CONTENT_URI, contentValues);
             }
 
             if (onSyncListener != null) {
-                onSyncListener.onSyncComplete();
+                onSyncListener.onSyncComplete(SYNC_TRAILERS_DATA);
             }
         }
     }
@@ -199,12 +216,14 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
                     movie.setRatingPageNumber(pageNumber);
                     movie.setPopularPageNumber(0);
                 }
+                movie.setPosterPath(C.POSTER_IMAGE_BASE_URL + movie.getPosterPath());
+                movie.setBackdropPath(C.BACKDROP_IMAGE_BASE_URL + movie.getBackdropPath());
 
                 ContentValues movieValues = new ContentValues();
 
                 movieValues.put(COLUMN_MOVIE_KEY, movie.getMovieId());
-                movieValues.put(COLUMN_POSTER_PATH, C.POSTER_IMAGE_BASE_URL + movie.getPosterPath());
-                movieValues.put(COLUMN_BACKDROP_PATH, C.BACKDROP_IMAGE_BASE_URL + movie.getBackdropPath());
+                movieValues.put(COLUMN_POSTER_PATH, movie.getPosterPath());
+                movieValues.put(COLUMN_BACKDROP_PATH, movie.getBackdropPath());
                 movieValues.put(COLUMN_TRAILER_PATH, movie.getVideo());
                 movieValues.put(COLUMN_ADULT, movie.getAdult());
                 movieValues.put(COLUMN_TITLE, movie.getTitle());
@@ -226,7 +245,7 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
             }
 
             if (onSyncListener != null) {
-                onSyncListener.onSyncComplete();
+                onSyncListener.onSyncComplete(SYNC_MOVIES_DATA);
             }
             Log.d(TAG, "saveMovies: Done Saving");
         }
@@ -242,38 +261,83 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
 
         Log.d(TAG, "onPerformSync: Performing Sync");
 
-        // Page 1
-        fetchMoviesData(getContext().getString(R.string.pref_filter_top_rated), 1);
-        fetchMoviesData(getContext().getString(R.string.pref_filter_popular), 1);
-        // Page 2
-        fetchMoviesData(getContext().getString(R.string.pref_filter_top_rated), 2);
-        fetchMoviesData(getContext().getString(R.string.pref_filter_popular), 2);
-    }
-
-    public static void addListener(Context context) {
-        if (context instanceof OnSyncListener) {
-            MovieSyncAdapter.onSyncListener = (OnSyncListener) context;
+        int syncDataType = bundle.getInt(SYNC_DATA_TYPE);
+        switch (syncDataType) {
+            case SYNC_MOVIES_DATA: {
+                fetchMoviesData(getContext().getString(R.string.pref_filter_top_rated), 1);
+                fetchMoviesData(getContext().getString(R.string.pref_filter_popular), 1);
+                // Page 2
+                fetchMoviesData(getContext().getString(R.string.pref_filter_top_rated), 2);
+                fetchMoviesData(getContext().getString(R.string.pref_filter_popular), 2);
+                break;
+            }
+            case SYNC_REVIEWS_DATA: {
+                int movieKey = bundle.getInt(MovieContract.ReviewEntry.COLUMN_MOVIE_KEY);
+                fetchReviewsData(movieKey, 1);
+                break;
+            }
+            case SYNC_TRAILERS_DATA: {
+                int movieKey = bundle.getInt(MovieContract.ReviewEntry.COLUMN_MOVIE_KEY);
+                fetchTrailersData(movieKey);
+                break;
+            }
         }
     }
 
-    public static void removeListener(Context context) {
-        if (context instanceof OnSyncListener) {
-            MovieSyncAdapter.onSyncListener = null;
-        }
+    public void setOnSyncListener(OnSyncListener listener) {
+        MovieSyncAdapter.onSyncListener = listener;
     }
 
-    public static void syncImmediately(Context context) {
+    public void syncImmediately() {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         ContentResolver.requestSync(
-                getSyncAccount(context),
+                getSyncAccount(),
                 context.getString(R.string.content_authority),
                 bundle
         );
     }
 
-    public static Account getSyncAccount(Context context) {
+    public void syncMovies() {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        bundle.putInt(SYNC_DATA_TYPE, SYNC_MOVIES_DATA);
+        ContentResolver.requestSync(
+                getSyncAccount(),
+                context.getString(R.string.content_authority),
+                bundle
+        );
+    }
+
+    public void syncTrailers(int movieKey) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        bundle.putInt(SYNC_DATA_TYPE, SYNC_TRAILERS_DATA);
+        bundle.putInt(MovieContract.MovieEntry.COLUMN_MOVIE_KEY, movieKey);
+        ContentResolver.requestSync(
+                getSyncAccount(),
+                context.getString(R.string.content_authority),
+                bundle
+        );
+    }
+
+    public void syncReviews(int movieKey) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        bundle.putInt(SYNC_DATA_TYPE, SYNC_REVIEWS_DATA);
+        bundle.putInt(MovieContract.MovieEntry.COLUMN_MOVIE_KEY, movieKey);
+        ContentResolver.requestSync(
+                getSyncAccount(),
+                context.getString(R.string.content_authority),
+                bundle
+        );
+    }
+
+    public Account getSyncAccount() {
         AccountManager accountManager = (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
 
         Account newAccount = new Account(context.getString(R.string.app_name), context.getString(R.string.sync_account_type));
@@ -283,22 +347,22 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
                 return null;
             }
 
-            onAccountCreated(newAccount, context);
+            onAccountCreated(newAccount);
         }
 
         return newAccount;
     }
 
-    public static void onAccountCreated(Account newAccount, Context context) {
-        MovieSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
+    public void onAccountCreated(Account newAccount) {
+        configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
 
         ContentResolver.setSyncAutomatically(newAccount, context.getString(R.string.content_authority), true);
 
-        syncImmediately(context);
+        syncImmediately();
     }
 
-    public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
-        Account account = getSyncAccount(context);
+    public void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
+        Account account = getSyncAccount();
         String authority = context.getString(R.string.content_authority);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -313,13 +377,4 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
             ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
         }
     }
-
-    public static void initializeSyncAdapter(Context context) {
-        getSyncAccount(context);
-    }
-
-    public interface OnSyncListener {
-        void onSyncComplete();
-    }
-
 }

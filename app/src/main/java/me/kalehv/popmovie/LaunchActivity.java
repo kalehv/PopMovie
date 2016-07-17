@@ -15,15 +15,14 @@ public class LaunchActivity
         super.onCreate(savedInstanceState);
 
         // Do Whatever is needed
-        MovieSyncAdapter.addListener(this);
-        MovieSyncAdapter.syncImmediately(this);
+        MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
+        movieSyncAdapter.setOnSyncListener(this);
+        movieSyncAdapter.syncImmediately();
 //        deleteDatabase(C.MOVIE_DATABASE_NAME);
     }
 
     @Override
-    public void onSyncComplete() {
-        // Remove self from listener
-        MovieSyncAdapter.removeListener(this);
+    public void onSyncComplete(int syncDataType) {
         // Launch Main Activity
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);

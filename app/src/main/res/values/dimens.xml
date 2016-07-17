@@ -25,4 +25,8 @@
 
     <!--Tablet Layout Detals-->
     <dimen name="movie_title_text_size">32sp</dimen>
+
+    <!--Trailer Thumbnails-->
+    <dimen name="trailer_thumbnail_width">120dp</dimen>
+    <dimen name="trailer_thumbnail_height">90dp</dimen>
 </resources>

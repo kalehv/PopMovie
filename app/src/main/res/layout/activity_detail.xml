@@ -54,4 +54,15 @@
 
     <include layout="@layout/content_detail"/>
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_favorite_movie"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/margin_standard"
+        android:src="@drawable/ic_favorite_selector"
+        app:layout_anchor="@+id/layout_movie_details"
+        app:layout_anchorGravity="bottom|right|end"
+        app:rippleColor="@android:color/white"/>
+
 </android.support.design.widget.CoordinatorLayout>

@@ -45,22 +45,22 @@ public class MovieProvider extends ContentProvider {
 
         trailerByMovieQueryBuilder = new SQLiteQueryBuilder();
         trailerByMovieQueryBuilder.setTables(
-                MovieContract.TrailerEntry.TABLE_NAME + " INNER JOIN " +
+                MovieContract.TrailerEntry.TABLE_NAME /*+ " INNER JOIN " +
                         MovieContract.MovieEntry.TABLE_NAME +
                         " ON " + MovieContract.TrailerEntry.TABLE_NAME +
                         "." + MovieContract.TrailerEntry.COLUMN_MOVIE_KEY +
                         " = " + MovieContract.MovieEntry.TABLE_NAME +
-                        "." + MovieContract.MovieEntry._ID
+                        "." + MovieContract.MovieEntry._ID */
         );
 
         reviewByMovieQueryBuilder = new SQLiteQueryBuilder();
         reviewByMovieQueryBuilder.setTables(
-                MovieContract.ReviewEntry.TABLE_NAME + " INNER JOIN " +
+                MovieContract.ReviewEntry.TABLE_NAME /*+ " INNER JOIN " +
                         MovieContract.MovieEntry.TABLE_NAME +
                         " ON " + MovieContract.ReviewEntry.TABLE_NAME +
                         "." + MovieContract.ReviewEntry.COLUMN_MOVIE_KEY +
                         " = " + MovieContract.MovieEntry.TABLE_NAME +
-                        "." + MovieContract.MovieEntry._ID
+                        "." + MovieContract.MovieEntry._ID */
         );
     }
 
@@ -95,6 +95,10 @@ public class MovieProvider extends ContentProvider {
         matcher.addURI(authority, MovieContract.PATH_MOVIES, MOVIES);
         // GET Movie/Id
         matcher.addURI(authority, MovieContract.PATH_MOVIES + "/#", MOVIE_WITH_ID);
+        // GET Trailers
+        matcher.addURI(authority, MovieContract.PATH_TRAILER, TRAILERS);
+        // GET Reviews
+        matcher.addURI(authority, MovieContract.PATH_REVIEW, REVIEWS);
         // GET Trailer/MovieId
         matcher.addURI(authority, MovieContract.PATH_TRAILER + "/#", TRAILERS);
         // GET Review/MovieId
@@ -338,7 +342,7 @@ public class MovieProvider extends ContentProvider {
                                 returnCount++;
                             }
                         } catch (SQLiteConstraintException constraintException) {
-                            updateExistingRow(db, value);
+                            updateExistingRowOnInsert(db, value);
                         }
                     }
                     db.setTransactionSuccessful();
@@ -353,9 +357,13 @@ public class MovieProvider extends ContentProvider {
                 db.beginTransaction();
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(MovieContract.TrailerEntry.TABLE_NAME, null, value);
-                        if (_id > 0) {
-                            returnCount++;
+                        try {
+                            long _id = db.insertOrThrow(MovieContract.TrailerEntry.TABLE_NAME, null, value);
+                            if (_id > 0) {
+                                returnCount++;
+                            }
+                        } catch (SQLiteConstraintException constraintException) {
+                            Log.d(TAG, "bulkInsert: Trailer already exists in database");
                         }
                     }
                     db.setTransactionSuccessful();
@@ -368,9 +376,13 @@ public class MovieProvider extends ContentProvider {
                 db.beginTransaction();
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(MovieContract.ReviewEntry.TABLE_NAME, null, value);
-                        if (_id > 0) {
-                            returnCount++;
+                        try {
+                            long _id = db.insertOrThrow(MovieContract.ReviewEntry.TABLE_NAME, null, value);
+                            if (_id > 0) {
+                                returnCount++;
+                            }
+                        } catch (SQLiteConstraintException constraintException) {
+                            Log.d(TAG, "bulkInsert: Review already exists in database");
                         }
                     }
                     db.setTransactionSuccessful();
@@ -400,7 +412,7 @@ public class MovieProvider extends ContentProvider {
         super.shutdown();
     }
 
-    private void updateExistingRow(SQLiteDatabase db, ContentValues value) {
+    private void updateExistingRowOnInsert(SQLiteDatabase db, ContentValues value) {
         int movieKey = (int) value.get(MovieContract.MovieEntry.COLUMN_MOVIE_KEY);
         Uri movieUri = MovieContract.MovieEntry.buildMovieUri(movieKey);
         Cursor cursor = getMovieByKey(movieUri);
