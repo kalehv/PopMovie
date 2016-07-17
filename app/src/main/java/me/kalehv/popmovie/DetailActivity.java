@@ -42,7 +42,6 @@ import butterknife.ButterKnife;
 import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
-import me.kalehv.popmovie.services.TheMovieDBServiceManager;
 import me.kalehv.popmovie.sync.MovieSyncAdapter;
 
 public class DetailActivity
@@ -98,11 +97,11 @@ public class DetailActivity
     //endregion
 
     private int actionBarHeight;
-    private Intent incomingIntent;
-    private TheMovieDBServiceManager movieDBServiceManager;
     private Uri selectedMovieUri;
     private boolean isFavorite;
     private int movieKey;
+    private boolean areTrailersFetchedFromServer = false;
+    private boolean areReviewsFetchedFromServer = false;
 
     private View.OnClickListener onFavoriteClickListener = new View.OnClickListener() {
         @Override
@@ -110,10 +109,6 @@ public class DetailActivity
             toggleMovieFavorite();
         }
     };
-
-    public DetailActivity() {
-        movieDBServiceManager = TheMovieDBServiceManager.getInstance();
-    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -133,7 +128,7 @@ public class DetailActivity
             return;
         }
 
-        incomingIntent = getIntent();
+        Intent incomingIntent = getIntent();
         if (incomingIntent.getExtras() != null) {
             selectedMovieUri = incomingIntent.getParcelableExtra(C.MOVIE_PARCEL);
         }
@@ -207,7 +202,7 @@ public class DetailActivity
             case TRAILERS_LOADER:
                 if (data != null && data.moveToFirst()) {
 
-                } else {
+                } else if (!areTrailersFetchedFromServer) {
                     MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
                     movieSyncAdapter.syncTrailers(movieKey);
                     movieSyncAdapter.setOnSyncListener(this);
@@ -216,7 +211,7 @@ public class DetailActivity
             case REVIEWS_LOADER:
                 if (data != null && data.moveToFirst()) {
 
-                } else {
+                } else if (!areReviewsFetchedFromServer) {
                     MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
                     movieSyncAdapter.syncReviews(movieKey);
                     movieSyncAdapter.setOnSyncListener(this);
@@ -372,9 +367,11 @@ public class DetailActivity
         switch (syncDataType) {
             case MovieSyncAdapter.SYNC_TRAILERS_DATA:
                 getSupportLoaderManager().initLoader(TRAILERS_LOADER, null, this);
+                areTrailersFetchedFromServer = true;
                 break;
             case MovieSyncAdapter.SYNC_REVIEWS_DATA:
                 getSupportLoaderManager().initLoader(REVIEWS_LOADER, null, this);
+                areReviewsFetchedFromServer = true;
                 break;
         }
     }
