@@ -17,6 +17,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -34,14 +35,17 @@ import com.squareup.picasso.Picasso;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import me.kalehv.popmovie.adapters.ReviewsAdapter;
 import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
+import me.kalehv.popmovie.models.Review;
 import me.kalehv.popmovie.sync.MovieSyncAdapter;
 
 public class DetailActivity
@@ -210,7 +214,7 @@ public class DetailActivity
                 break;
             case REVIEWS_LOADER:
                 if (data != null && data.moveToFirst()) {
-
+                    setReviewsView(data);
                 } else if (!areReviewsFetchedFromServer) {
                     MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
                     movieSyncAdapter.syncReviews(movieKey);
@@ -313,7 +317,7 @@ public class DetailActivity
                 .into(imageViewMovieDetailPoster);
 
         textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
-        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
+        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
 
         String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
         DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -360,6 +364,24 @@ public class DetailActivity
         );
 
         isFavorite = !isFavorite;
+    }
+
+
+    private void setReviewsView(Cursor data) {
+        ArrayList<Review> reviewArrayList = new ArrayList<>();
+        for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
+            // The Cursor is now set to the right position
+            Review review = new Review();
+            review.setAuthor(data.getString(MovieContract.ReviewEntry.COL_INDEX_AUTHOR));
+            review.setContent(data.getString(MovieContract.ReviewEntry.COL_INDEX_CONTENT));
+            reviewArrayList.add(review);
+        }
+
+        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(this, reviewArrayList);
+        recyclerViewMovieReviews.setAdapter(reviewsAdapter);
+
+        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
     }
 
     @Override
