@@ -71,6 +71,7 @@ public class TrailersAdapter
         ViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
+            imageView.setOnClickListener(this);
         }
 
         @Override

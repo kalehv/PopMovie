@@ -58,7 +58,6 @@ public class ReviewsAdapter
 
         ViewHolder(View view) {
             super(view);
-
             ButterKnife.bind(this, view);
         }
     }
