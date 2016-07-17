@@ -43,14 +43,18 @@ import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.services.TheMovieDBServiceManager;
+import me.kalehv.popmovie.sync.MovieSyncAdapter;
 
 public class DetailActivity
         extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<Cursor> {
+        implements LoaderManager.LoaderCallbacks<Cursor>,
+        MovieSyncAdapter.OnSyncListener {
 
     private final String TAG = DetailActivity.class.getSimpleName();
 
     private static final int MOVIES_LOADER = 0;
+    private static final int TRAILERS_LOADER = 1;
+    private static final int REVIEWS_LOADER = 2;
 
     //region ButterKnife declarations
     @BindView(R.id.app_bar)
@@ -154,31 +158,76 @@ public class DetailActivity
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (selectedMovieUri != null) {
-            // Now create and return a CursorLoader that will take care of
-            // creating a Cursor for the data being displayed.
-            return new CursorLoader(
-                    this,
-                    selectedMovieUri,
-                    C.SELECT_ALL_COLUMNS,
-                    null,
-                    null,
-                    null
-            );
+            switch (id) {
+                case MOVIES_LOADER:
+                    return new CursorLoader(
+                            this,
+                            selectedMovieUri,
+                            C.SELECT_ALL_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+                case TRAILERS_LOADER:
+                    return new CursorLoader(
+                            this,
+                            MovieContract.TrailerEntry.buildTrailerUriForMovie(movieKey),
+                            C.SELECT_ALL_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+                case REVIEWS_LOADER:
+                    return new CursorLoader(
+                            this,
+                            MovieContract.ReviewEntry.buildReviewUriForMovie(movieKey),
+                            C.SELECT_ALL_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+
+            }
         }
         return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data != null && data.moveToFirst()) {
-            setupView(data);
-            isFavorite = data.getInt(MovieContract.MovieEntry.COL_INDEX_FAVORITE) != 0;
-            movieKey = data.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
+        switch (loader.getId()) {
+            case MOVIES_LOADER:
+                if (data != null && data.moveToFirst()) {
+                    setupView(data);
+                    isFavorite = data.getInt(MovieContract.MovieEntry.COL_INDEX_FAVORITE) != 0;
+                    movieKey = data.getInt(MovieContract.MovieEntry.COL_INDEX_MOVIE_KEY);
+                    getSupportLoaderManager().initLoader(REVIEWS_LOADER, null, this);
+                    getSupportLoaderManager().initLoader(TRAILERS_LOADER, null, this);
+                }
+                break;
+            case TRAILERS_LOADER:
+                if (data != null && data.moveToFirst()) {
+
+                } else {
+                    MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
+                    movieSyncAdapter.syncTrailers(movieKey);
+                    movieSyncAdapter.setOnSyncListener(this);
+                }
+                break;
+            case REVIEWS_LOADER:
+                if (data != null && data.moveToFirst()) {
+
+                } else {
+                    MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
+                    movieSyncAdapter.syncReviews(movieKey);
+                    movieSyncAdapter.setOnSyncListener(this);
+                }
+                break;
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {}
+    public void onLoaderReset(Loader<Cursor> loader) {
+    }
 
     private void setResultData() {
         Intent resultIntent = new Intent();
@@ -269,7 +318,7 @@ public class DetailActivity
                 .into(imageViewMovieDetailPoster);
 
         textViewMovieTitle.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_TITLE));
-        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW)+data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
+        textViewOverview.setText(data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW) + data.getString(MovieContract.MovieEntry.COL_INDEX_OVERVIEW));
 
         String releaseDate = data.getString(MovieContract.MovieEntry.COL_INDEX_RELEASE_DATE);
         DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -316,5 +365,17 @@ public class DetailActivity
         );
 
         isFavorite = !isFavorite;
+    }
+
+    @Override
+    public void onSyncComplete(int syncDataType) {
+        switch (syncDataType) {
+            case MovieSyncAdapter.SYNC_TRAILERS_DATA:
+                getSupportLoaderManager().initLoader(TRAILERS_LOADER, null, this);
+                break;
+            case MovieSyncAdapter.SYNC_REVIEWS_DATA:
+                getSupportLoaderManager().initLoader(REVIEWS_LOADER, null, this);
+                break;
+        }
     }
 }

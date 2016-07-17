@@ -91,11 +91,6 @@ public class DetailFragment
 //        recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(getActivity()));
 //        recyclerViewMovieReviews.setNestedScrollingEnabled(false);
 //    }
-    
-    @Override
-    public void onSyncComplete() {
-        MovieSyncAdapter.removeListener(getContext());
-    }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -120,7 +115,8 @@ public class DetailFragment
         // Do not populate views if there is no data passed by MainActivity.
         if (args != null) {
             selectedMovieUri = args.getParcelable(C.MOVIE_PARCEL);
-            MovieSyncAdapter.addListener(getContext());
+            MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(getActivity(), true);
+            movieSyncAdapter.setOnSyncListener(this);
         }
 
         return rootView;
@@ -213,5 +209,10 @@ public class DetailFragment
         );
 
         isFavorite = !isFavorite;
+    }
+
+    @Override
+    public void onSyncComplete(int syncDataType) {
+
     }
 }
