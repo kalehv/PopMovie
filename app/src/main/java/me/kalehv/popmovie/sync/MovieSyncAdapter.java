@@ -177,12 +177,15 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
 
             for (int i = 0; i < trailerList.size(); i++) {
                 Trailer trailer = trailerList.get(i);
+                trailer.setUrl(C.YOUTUBE_VIDEO_URL + trailer.getKey());
+                trailer.setImageUrl(C.YOUTUBE_VIDEO_THUMBNAIL + trailer.getKey() + C.YOUTUBE_VIDEO_THUMBNAIL_FILE_NAME);
 
                 ContentValues trailerValues = new ContentValues();
 
                 trailerValues.put(MovieContract.TrailerEntry.COLUMN_MOVIE_KEY, movieId);
                 trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_KEY, trailer.getId());
-                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_URL, C.YOUTUBE_VIDEO_URL + trailer.getKey());
+                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_URL, trailer.getUrl());
+                trailerValues.put(MovieContract.TrailerEntry.COLUMN_TRAILER_IMAGE_URL, trailer.getImageUrl());
 
                 contentValuesVector.add(trailerValues);
             }
@@ -213,12 +216,14 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
                     movie.setRatingPageNumber(pageNumber);
                     movie.setPopularPageNumber(0);
                 }
+                movie.setPosterPath(C.POSTER_IMAGE_BASE_URL + movie.getPosterPath());
+                movie.setBackdropPath(C.BACKDROP_IMAGE_BASE_URL + movie.getBackdropPath());
 
                 ContentValues movieValues = new ContentValues();
 
                 movieValues.put(COLUMN_MOVIE_KEY, movie.getMovieId());
-                movieValues.put(COLUMN_POSTER_PATH, C.POSTER_IMAGE_BASE_URL + movie.getPosterPath());
-                movieValues.put(COLUMN_BACKDROP_PATH, C.BACKDROP_IMAGE_BASE_URL + movie.getBackdropPath());
+                movieValues.put(COLUMN_POSTER_PATH, movie.getPosterPath());
+                movieValues.put(COLUMN_BACKDROP_PATH, movie.getBackdropPath());
                 movieValues.put(COLUMN_TRAILER_PATH, movie.getVideo());
                 movieValues.put(COLUMN_ADULT, movie.getAdult());
                 movieValues.put(COLUMN_TITLE, movie.getTitle());

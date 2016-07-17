@@ -50,6 +50,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                 MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + " INTEGER NOT NULL, " +
                 MovieContract.TrailerEntry.COLUMN_TRAILER_KEY + " INTEGER UNIQUE NOT NULL, " +
                 MovieContract.TrailerEntry.COLUMN_TRAILER_URL + " TEXT, " +
+                MovieContract.TrailerEntry.COLUMN_TRAILER_IMAGE_URL + " TEXT, " +
 
                 " FOREIGN KEY (" + MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + ") REFERENCES " +
                 MovieContract.MovieEntry.TABLE_NAME + " (" + MovieContract.MovieEntry._ID + ") )";

@@ -86,11 +86,13 @@ public class MovieContract {
         public static final String COLUMN_MOVIE_KEY = "movie_id";
         public static final String COLUMN_TRAILER_KEY = "trailer_id";
         public static final String COLUMN_TRAILER_URL = "trailer_url";
+        public static final String COLUMN_TRAILER_IMAGE_URL = "trailer_image_url";
 
         public static final int COL_INDEX_ID = 0;
         public static final int COL_INDEX_MOVIE_KEY = 1;
         public static final int COL_INDEX_TRAILER_KEY = 2;
         public static final int COL_INDEX_TRAILER_URL = 3;
+        public static final int COL_INDEX_TRAILER_IMAGE_URL = 4;
 
         public static Uri buildTrailerUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);

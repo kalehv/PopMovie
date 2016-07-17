@@ -12,6 +12,10 @@ public class C {
     public static final String POSTER_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500";
     public static final String BACKDROP_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/original";
     public static final String YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch?v=";
+    // http://img.youtube.com/vi/7d_jQycdQGo/default.jpg
+    public static final String YOUTUBE_VIDEO_THUMBNAIL = "http://img.youtube.com/vi/";
+    public static final String YOUTUBE_VIDEO_THUMBNAIL_FILE_NAME = "/default.jpg";
+
     public static final String YOUTUBE_FORCE_FULLSCREEN = "force_fullscreen";
 
     // Parceler Keys

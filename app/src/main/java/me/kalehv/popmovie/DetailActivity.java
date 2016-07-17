@@ -42,10 +42,12 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.kalehv.popmovie.adapters.ReviewsAdapter;
+import me.kalehv.popmovie.adapters.TrailersAdapter;
 import me.kalehv.popmovie.data.MovieContract;
 import me.kalehv.popmovie.data.MovieProvider;
 import me.kalehv.popmovie.global.C;
 import me.kalehv.popmovie.models.Review;
+import me.kalehv.popmovie.models.Trailer;
 import me.kalehv.popmovie.sync.MovieSyncAdapter;
 
 public class DetailActivity
@@ -95,6 +97,9 @@ public class DetailActivity
 
     @BindView(R.id.recyclerview_movie_review)
     RecyclerView recyclerViewMovieReviews;
+
+    @BindView(R.id.recyclerview_movie_trailer)
+    RecyclerView recyclerViewMovieTrailers;
 
     @BindView(R.id.fab_favorite_movie)
     FloatingActionButton fabFavoriteMovie;
@@ -205,7 +210,7 @@ public class DetailActivity
                 break;
             case TRAILERS_LOADER:
                 if (data != null && data.moveToFirst()) {
-
+                    setTrailersView(data);
                 } else if (!areTrailersFetchedFromServer) {
                     MovieSyncAdapter movieSyncAdapter = new MovieSyncAdapter(this, true);
                     movieSyncAdapter.syncTrailers(movieKey);
@@ -382,6 +387,23 @@ public class DetailActivity
 
         recyclerViewMovieReviews.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewMovieReviews.setNestedScrollingEnabled(false);
+    }
+
+    private void setTrailersView(Cursor data) {
+        ArrayList<Trailer> trailerArrayList = new ArrayList<>();
+        for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
+            // The Cursor is now set to the right position
+            Trailer trailer = new Trailer();
+            trailer.setUrl(data.getString(MovieContract.TrailerEntry.COL_INDEX_TRAILER_URL));
+            trailer.setImageUrl(data.getString(MovieContract.TrailerEntry.COL_INDEX_TRAILER_IMAGE_URL));
+            trailerArrayList.add(trailer);
+        }
+
+        TrailersAdapter trailersAdapter = new TrailersAdapter(this, trailerArrayList);
+        recyclerViewMovieTrailers.setAdapter(trailersAdapter);
+
+        recyclerViewMovieTrailers.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        recyclerViewMovieTrailers.setNestedScrollingEnabled(false);
     }
 
     @Override
